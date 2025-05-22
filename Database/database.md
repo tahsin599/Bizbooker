@@ -245,10 +245,129 @@ CREATE TABLE ai_messages (
     id SERIAL PRIMARY KEY,
     conversation_id BIGINT UNSIGNED NOT NULL,
     user_message TEXT NOT NULL,
-    ai_reply TEXT, -- NULL until AI responds
+    ai_reply TEXT, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (conversation_id) REFERENCES ai_conversations(id) ON DELETE CASCADE
 );
+
+
+
+business Hours table:
+
+CREATE TABLE business_hours (
+    id SERIAL PRIMARY KEY,
+    business_id BIGINT UNSIGNED NOT NULL, 
+    day_of_week TINYINT NOT NULL CHECK (day_of_week BETWEEN 0 AND 6),
+    open_time TIME NOT NULL,
+    close_time TIME NOT NULL,
+    is_closed BOOLEAN DEFAULT FALSE,
+    temp_close_time TIME,
+    is_temp_on BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (business_id) REFERENCES business(id) ON DELETE CASCADE
+);
+
+
+
+
+business holidays table:
+
+
+CREATE TABLE business_holidays (
+    id SERIAL PRIMARY KEY,
+    business_id BIGINT UNSIGNED NOT NULL,
+    holiday_name VARCHAR(100) NOT NULL,
+    holiday_date DATE NOT NULL,
+    is_recurring BOOLEAN DEFAULT FALSE, 
+    FOREIGN KEY (business_id) REFERENCES business(id) ON DELETE CASCADE
+);
+
+
+slot configuration table:
+
+CREATE TABLE slot_configuration (
+    id SERIAL PRIMARY KEY,
+    location_id BIGINT UNSIGNED NOT NULL,
+    max_slots_per_interval INT DEFAULT 1,
+    used_slots INT DEFAULT 0,
+    start_time TIME NOT NULL DEFAULT '09:00:00',  
+    end_time TIME NOT NULL DEFAULT '17:00:00',     
+    last_reset_date DATE,                       
+    FOREIGN KEY (location_id) REFERENCES business_locations(id) ON DELETE CASCADE
+);
+
+
+images table:
+
+
+CREATE TABLE business_location_images (
+    id SERIAL PRIMARY KEY,
+    location_id BIGINT UNSIGNED NOT NULL,
+    image_name VARCHAR(255),
+    image_type VARCHAR(255),
+    image_data LONGBLOB,
+    caption VARCHAR(255),                              
+    is_primary BOOLEAN DEFAULT FALSE, 
+    display_order INT DEFAULT 0,      
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (location_id) REFERENCES business_locations(id) ON DELETE CASCADE
+);
+
+
+event:
+//it updates the used slots on a regular basis
+
+DELIMITER //
+
+CREATE EVENT reset_used_slots_daily
+ON SCHEDULE EVERY 1 MINUTE
+DO
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE loc_id BIGINT UNSIGNED;
+    DECLARE business_id_val BIGINT UNSIGNED;
+    DECLARE loc_close_time TIME;
+
+    DECLARE loc_cursor CURSOR FOR 
+        SELECT bl.id, bl.business_id
+        FROM business_locations bl
+        JOIN business b ON bl.business_id = b.id
+        WHERE b.is_approved = TRUE;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN loc_cursor;
+
+    loc_loop: LOOP
+        FETCH loc_cursor INTO loc_id, business_id_val;
+        IF done THEN
+            LEAVE loc_loop;
+        END IF;
+
+        -- Get today's closing time
+        SELECT close_time INTO loc_close_time
+        FROM business_hours
+        WHERE business_id = business_id_val
+          AND day_of_week = DAYOFWEEK(CURRENT_DATE) - 1
+          AND is_closed = FALSE
+        LIMIT 1;
+
+        -- If closing time passed and not yet reset today
+        IF loc_close_time IS NOT NULL 
+           AND CURRENT_TIME > loc_close_time 
+           AND (SELECT last_reset_date FROM slot_configuration WHERE location_id = loc_id) != CURRENT_DATE
+        THEN
+            UPDATE slot_configuration
+            SET used_slots = 0,
+                last_reset_date = CURRENT_DATE
+            WHERE location_id = loc_id;
+        END IF;
+
+    END LOOP;
+
+    CLOSE loc_cursor;
+END //
+
+DELIMITER ;
 
 
 
