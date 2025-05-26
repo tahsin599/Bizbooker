@@ -51,8 +51,7 @@ public class BusinessLocation {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL)
-    private List<BusinessHours> businessHours;
+
 
     @OneToMany(mappedBy = "location", cascade = CascadeType.ALL)
     private List<BusinessLocationImage> images;
@@ -143,13 +142,7 @@ public class BusinessLocation {
         this.createdAt = createdAt;
     }
 
-    public List<BusinessHours> getBusinessHours() {
-        return businessHours;
-    }
-
-    public void setBusinessHours(List<BusinessHours> businessHours) {
-        this.businessHours = businessHours;
-    }
+    
 
     public List<BusinessLocationImage> getImages() {
         return images;
@@ -179,8 +172,7 @@ public class BusinessLocation {
     public String toString() {
         return "BusinessLocation [id=" + id + ", business=" + business + ", address=" + address + ", area=" + area
                 + ", city=" + city + ", postalCode=" + postalCode + ", contactPhone=" + contactPhone + ", contactEmail="
-                + contactEmail + ", isPrimary=" + isPrimary + ", createdAt=" + createdAt + ", businessHours="
-                + businessHours + ", images=" + images + ", appointments=" + appointments + ", slotConfiguration="
+                + contactEmail + ", isPrimary=" + isPrimary + ", createdAt=" + createdAt  + ", images=" + images + ", appointments=" + appointments + ", slotConfiguration="
                 + slotConfiguration + "]";
     }
 
