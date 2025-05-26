@@ -56,6 +56,7 @@ body{
     border-radius: 4px;
     box-shadow: .5px .5px .5px .5px rgba(0, 0, 0, 0.2);
     
+    
 }
 .lineup {
   flex: 1;
@@ -99,5 +100,16 @@ body{
     width: 100%;
     text-align: center;
 }
+.signupbutton
+{
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+}
+.otheroptionbutton
+{
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+}
+
 
 

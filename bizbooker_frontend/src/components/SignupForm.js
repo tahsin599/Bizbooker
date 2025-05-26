@@ -1,7 +1,7 @@
 // 
 import { useForm } from "react-hook-form";
 import { Calendar } from 'lucide-react';
-import { Link } from "react-router-dom";
+//import { Link } from "react-router-dom";
 import "./SignupForm.css"
 
 const SignupForm = () => {
@@ -163,9 +163,9 @@ const SignupForm = () => {
 
                     <div className="signupformfooter">
                         Already have an account?
-                        <Link to="/login" className="something">
+                       
                             Log in
-                        </Link>
+                        
                         here
                     </div>
                 </form>
