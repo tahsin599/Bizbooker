@@ -1,0 +1,103 @@
+body{
+    display: flex;
+    justify-content: center;
+}
+
+.signupform{
+    border: 1px black solid;
+    width:100%;
+    padding: 10%;
+    box-shadow: 4px 8px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.title
+
+{
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  min-height: 16px; /* reserve space even if no error */
+  display: block;
+  margin-top: 4px;
+}
+
+
+.headericon {
+    width: 50px;
+    height: 50px;
+    border-radius:10px; 
+    padding: 15px;
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    color: white;
+}
+
+.signuptitle
+{
+    color: linear-gradient(to right, #6a11cb, #2575fc);
+}
+
+
+.otheroptioncontainer,.userpassword
+{
+    width: 50%;
+    margin-right: 5px;
+    
+}
+
+.signupbutton,.box ,.otheroptionbutton{
+    width: 100%;
+    padding: 15px; 
+    border: 1px solid #ddd; 
+    box-sizing: border-box; 
+    border-radius: 4px;
+    box-shadow: .5px .5px .5px .5px rgba(0, 0, 0, 0.2);
+    
+}
+.lineup {
+  flex: 1;
+  height: 1px;
+  background-color: black;
+}
+
+.type-name,.userfullname,.useremail,.description{
+    width:100%;
+}
+
+
+
+.signupformheadercontainer
+{
+    text-align: center;
+    width: 100%;
+}
+
+.signupformcontainer
+{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.signupform-subcontainer
+{
+    
+  display: flex;
+  align-items: center;
+  gap: 10px; /* optional: space between line and text */
+  margin: 20px 0; /* optional: vertical spacing */
+
+
+    
+}
+
+.signupformfooter
+{
+    width: 100%;
+    text-align: center;
+}
+
+
