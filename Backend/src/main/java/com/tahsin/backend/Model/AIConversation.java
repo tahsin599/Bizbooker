@@ -38,5 +38,51 @@ public class AIConversation {
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL)
     private List<AIMessage> messages = new ArrayList<>();
 
-    // Getters, setters, constructors
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastActivity() {
+        return lastActivity;
+    }
+
+    public void setLastActivity(LocalDateTime lastActivity) {
+        this.lastActivity = lastActivity;
+    }
+
+    public List<AIMessage> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<AIMessage> messages) {
+        this.messages = messages;
+    }
+
+    @Override
+    public String toString() {
+        return "AIConversation [id=" + id + ", user=" + user + ", createdAt=" + createdAt + ", lastActivity="
+                + lastActivity + ", messages=" + messages + "]";
+    }
+
+    
 }
