@@ -17,11 +17,12 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
     List<Business> findByOwner(User owner);
     List<Business> findByIsApproved(boolean isApproved);
     
-    @Query("SELECT b FROM Business b WHERE " +
+   /*  @Query("SELECT b FROM Business b WHERE " +
            "LOWER(b.businessName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(b.description) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<Business> searchBusinesses(@Param("query") String query);
+    List<Business> searchBusinesses(@Param("query") String query);*/
     
     @Query("SELECT DISTINCT b FROM Business b JOIN b.services s WHERE s.name = :serviceName")
     List<Business> findByServiceName(@Param("serviceName") String serviceName);
+    boolean existsByBusinessName(String businessName);
 }
