@@ -52,6 +52,10 @@ public class LoginController {
     Optional<User> user = userRepository.findByUsername("ktahsin280");
     if (!user.isPresent()) {
         return ResponseEntity.notFound().build();
+
+
+
+        
     }
     byte[] image = user.get().getImageData();
     if (image == null) {
