@@ -4,4 +4,7 @@ public record BusinessApprovalDto(
     Long businessId,
     boolean approve,
     String notes
+
+
+    
 ) {}

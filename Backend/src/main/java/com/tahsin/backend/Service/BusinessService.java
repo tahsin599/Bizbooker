@@ -15,6 +15,9 @@ public class BusinessService {
     public String registerBusiness(Business business){
         if(businessRepository.existsByBusinessName(business.getBusinessName())){
             return "Business name already exists";
+
+
+            
         }
         
         businessRepository.save(business);
