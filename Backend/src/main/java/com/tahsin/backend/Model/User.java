@@ -21,7 +21,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,7 +57,8 @@ public class User {
     private String imageName;
     private String imageType;
 
-    @Lob
+   @Lob
+    @Column(name = "image_data", columnDefinition = "bytea")
     private byte[] imageData;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
