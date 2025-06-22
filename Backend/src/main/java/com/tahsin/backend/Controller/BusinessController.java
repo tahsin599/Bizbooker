@@ -18,6 +18,8 @@ public class BusinessController {
     public ResponseEntity<String> registerBusiness(@RequestBody Business business) {
         String response = businessService.registerBusiness(business);
         return ResponseEntity.ok(response);
+
+        
     }
 
     
