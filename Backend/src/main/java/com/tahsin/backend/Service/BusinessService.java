@@ -23,6 +23,9 @@ public class BusinessService {
         businessRepository.save(business);
         return "Business registered successfully";
 
+
+        
+
         
 
     }
