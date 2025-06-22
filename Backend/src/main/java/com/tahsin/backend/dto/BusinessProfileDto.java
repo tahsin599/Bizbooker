@@ -9,4 +9,7 @@ public record BusinessProfileDto(
     String approvalStatus,
     String categoryName,
     List<LocationDto> locations
+
+
+    
 ) {}
