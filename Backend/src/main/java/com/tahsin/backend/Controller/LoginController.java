@@ -43,6 +43,8 @@ public class LoginController {
         user.setUsername(generateUniqueUsername(user.getEmail()));
         service.register(user,profilePicture);
         
+
+        
        
 
     }
@@ -55,7 +57,7 @@ public class LoginController {
 
 
 
-        
+
     }
     byte[] image = user.get().getImageData();
     if (image == null) {
