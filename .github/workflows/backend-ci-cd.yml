@@ -37,7 +37,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
         
     - name: Build and push Docker image
-      working-directory: ./backend
+      working-directory: ./Backend
       run: |
         docker build -t tahsin599/bizbooker-backend:latest .
         docker push tahsin599/bizbooker-backend:latest
