@@ -54,10 +54,23 @@ jobs:
             {"key": "DATASOURCE_PASSWORD", "value": "${{ secrets.DATASOURCE_PASSWORD }}", "sync": true},
             {"key": "FRONTEND_URL", "value": "${{ secrets.FRONTEND_URL }}"}
           ]'
+    
+    - name: Update Render Image
+      run: |
+        curl -X PATCH \
+          "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}" \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "image": {
+              "owner": "tahsin599",
+              "name": "bizbooker-backend",
+              "tag": "latest"
+            }
+          }'
         
     - name: Deploy to Render
       uses: johnbeynon/render-deploy-action@v0.0.8
       with:
         service-id: ${{ secrets.RENDER_SERVICE_ID }}
         api-key: ${{ secrets.RENDER_API_KEY }}
-        
