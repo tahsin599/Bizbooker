@@ -37,6 +37,9 @@ public class UserService {
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
         return "User registered successfully";
+
+
+        
     }
 
     public UserProfileDto getUserProfile(Long userId) {
