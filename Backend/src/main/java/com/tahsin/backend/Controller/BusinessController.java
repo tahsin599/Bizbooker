@@ -19,6 +19,9 @@ public class BusinessController {
         String response = businessService.registerBusiness(business);
         return ResponseEntity.ok(response);
 
+
+
+
         
     }
 
