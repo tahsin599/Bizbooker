@@ -17,11 +17,13 @@ public class BusinessService {
             return "Business name already exists";
 
 
-            
+
         }
         
         businessRepository.save(business);
         return "Business registered successfully";
+
+        
 
     }
 
