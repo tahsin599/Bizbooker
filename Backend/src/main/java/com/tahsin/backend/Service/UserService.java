@@ -28,7 +28,7 @@ public class UserService {
             return "Email already exists";
 
 
-            
+
 
         }
 
@@ -36,6 +36,7 @@ public class UserService {
         user.setImageType(profilePicture.getContentType());
         user.setImageData(profilePicture.getBytes());
             
+        
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
