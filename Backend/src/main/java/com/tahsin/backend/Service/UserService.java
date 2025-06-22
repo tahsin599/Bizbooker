@@ -27,6 +27,9 @@ public class UserService {
         if(userRepository.existsByEmail(user.getEmail())){
             return "Email already exists";
 
+
+            
+
         }
 
         user.setImageName(profilePicture.getOriginalFilename());
@@ -39,7 +42,7 @@ public class UserService {
         return "User registered successfully";
 
 
-        
+
 
 
 
