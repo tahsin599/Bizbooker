@@ -58,7 +58,7 @@ public class User {
     private String imageType;
 
    @Lob
-    @Column(name = "image_data", columnDefinition = "bytea")
+    @Column(name = "image_data")
     private byte[] imageData;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
