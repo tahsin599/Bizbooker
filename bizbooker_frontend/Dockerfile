@@ -1,4 +1,4 @@
-# frontend/Dockerfile
+
 FROM node:18-alpine
 
 WORKDIR /app
@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-# Use a lightweight web server (like serve) to serve the build folder
+
 RUN npm install -g serve
 
 EXPOSE 3000
