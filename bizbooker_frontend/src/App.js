@@ -1,34 +1,33 @@
-import './App.css';
-import SignupForm from './components/SignupForm';
-import LoginForm from './components/Login';
-import ImageFromBackend from './components/check';
-import { BrowserRouter as Router, Routes, Route, BrowserRouter } from 'react-router-dom';
-import LandingPage from './components/LandingPage';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import AboutUs from './components/AboutUs';
-import SocialIcons from './components/SocialIcons';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './modules/Navbar';
+import LandingPage from './modules/LandingPage';
+import Footer from './modules/Footer';
+import SignupForm from './modules/SignupForm'; // Make sure this file exists
+import LoginForm from './modules/LoginForm'; // Make sure this file exists
+import AboutUs from './modules/AboutUs';
+import Dashboard from './modules/DashBoard';
+import CreateBusiness from './modules/CreateBusiness';
+import BusinessService from './modules/BusinessService';
 
 function App() {
   return (
     <BrowserRouter>
       <div className="App">
-        <Navbar/>
+        {/* <Navbar isAuthenticated={false} /> */}
         <Routes>
-          <Route path="/" element={<LandingPage/>}/>
-          
-          <Route path="/signup" element={<SignupForm />} />
+          <Route path="/" element={<><Navbar isAuthenticated={false} /><LandingPage /><Footer /></>} />
+          <Route path="/signup" element={<><Navbar isAuthenticated={false} /><SignupForm /><Footer /></>} />
+          <Route path="/login" element={<><Navbar isAuthenticated={false} /><LoginForm /><Footer /></>} />
+          <Route path="/about" element={<><Navbar isAuthenticated={false} /><AboutUs /><Footer /></>} />
+          <Route path="/dashboard" element={<><Navbar isAuthenticated={true} /><Dashboard /><Footer /></>} />
+          <Route path="/create-business" element={<><Navbar isAuthenticated={true} /><CreateBusiness /><Footer /></>} />
+          <Route path="/business-service" element={<><Navbar isAuthenticated={true} /><BusinessService /><Footer   /></>} />
 
+          {/* Add more routes as needed */}
           
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/about" element={<AboutUs/>} />
         </Routes>
-        <SocialIcons/>
-        <Footer/>
-        
- 
-        
-        <ImageFromBackend />
+        {/* <Footer /> */}
       </div>
     </BrowserRouter>
   );
