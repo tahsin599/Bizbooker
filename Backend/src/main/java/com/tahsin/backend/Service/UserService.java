@@ -3,7 +3,7 @@ package com.tahsin.backend.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
-import org.apache.catalina.mapper.Mapper;
+// import org.apache.catalina.mapper.Mapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.tahsin.backend.Model.User;
 import com.tahsin.backend.Repository.UserRepository;
 import com.tahsin.backend.dto.UserProfileDto;
-import com.tahsin.backend.dto.UserRegistrationDto;
+// import com.tahsin.backend.dto.UserRegistrationDto;
 
 @Service
 @Component
