@@ -1,11 +1,11 @@
 package com.tahsin.backend.Model;
 
-import java.sql.Types;
+
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
+
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -29,8 +30,10 @@ public class BusinessLocationImage {
 
     private String imageName;
     private String imageType;
+    
 
-    @JdbcTypeCode(Types.BINARY)
+    @Lob
+    
     private byte[] imageData;
 
     @Column(length = 255)

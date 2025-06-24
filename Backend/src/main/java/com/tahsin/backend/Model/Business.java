@@ -19,6 +19,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
 // import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -62,6 +63,32 @@ public class Business {
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL)
     private List<BusinessLocation> locations;
+
+    public String getImageName() {
+        return imageName;
+    }
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
+    }
+
+
+    private String imageName;
+    private String imageType;
+    
+
+    public String getImageType() {
+        return imageType;
+    }
+
+    public void setImageType(String imageType) {
+        this.imageType = imageType;
+    }
+
+
+    @Lob
+    
+    private byte[] imageData;
 
     @ManyToMany
     @JoinTable(
