@@ -13,7 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
+// import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -35,7 +35,7 @@ public class Report {
     @Column(nullable = false)
     private Long reportedEntityId;
 
-    @Lob
+    
     @Column(nullable = false)
     private String reason;
 
@@ -47,7 +47,7 @@ public class Report {
     @JoinColumn(name = "resolved_by")
     private User resolvedBy;
 
-    @Lob
+   
     private String resolutionNotes;
 
     @CreationTimestamp

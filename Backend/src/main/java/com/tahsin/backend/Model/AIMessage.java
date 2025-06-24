@@ -10,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
+// import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -25,11 +25,11 @@ public class AIMessage {
     @JoinColumn(name = "conversation_id", nullable = false)
     private AIConversation conversation;
 
-    @Lob
+    
     @Column(nullable = false)
     private String userMessage;
 
-    @Lob
+    
     private String aiReply;
 
     @CreationTimestamp
