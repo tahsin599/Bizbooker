@@ -9,16 +9,17 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-// import jakarta.persistence.Lob;
+import jakarta.persistence.Lob;
+
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import java.sql.Types;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.JdbcTypeCode;
+
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
@@ -58,8 +59,8 @@ public class User {
     private String imageName;
     private String imageType;
 
-     
-    @JdbcTypeCode(Types.BINARY)
+    @Lob
+    
     private byte[] imageData;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
