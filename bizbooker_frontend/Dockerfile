@@ -1,17 +1,18 @@
+# Multi-stage build for optimized production image
 FROM node:18-alpine AS builder
+
 WORKDIR /app
 
-# Install dependencies separately
-COPY package.json package-lock.json ./
-RUN npm ci --silent
+# Copy package files
+COPY package*.json ./
 
-# Copy only what's needed for build
-COPY src ./src
-COPY public ./public
-COPY tsconfig.json ./
+# Install dependencies
+RUN npm ci --silent --only=production
 
-# Set memory limit and build
+# Copy source code
+COPY . .
 
+# Change this line in your Dockerfile
 RUN npm run build
 
 # To this (increases memory to 4GB)
