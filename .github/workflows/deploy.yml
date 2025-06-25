@@ -372,7 +372,7 @@ jobs:
       
       - name: Deploy with docker-compose
         run: |
-          docker --context azure-vm compose -f docker-compose.deploy.yml down || true
+          docker --context azure-vm compose -f docker-compose.deploy.yml down --remove-orphans --timeout 1 || true
           docker --context azure-vm compose -f docker-compose.deploy.yml pull
           docker --context azure-vm compose -f docker-compose.deploy.yml up --build -d --wait
       
