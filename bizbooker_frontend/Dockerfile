@@ -43,3 +43,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Serve the application
 CMD ["serve", "-s", "build", "-l", "3000"]
+
