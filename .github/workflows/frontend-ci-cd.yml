@@ -6,6 +6,7 @@ on:
     paths:
       
       - 'bizbooker_frontend/**'  # Additional path you mentioned
+      
 
 env:
   DOCKER_IMAGE: "tahsin599/bizbooker-frontend"  # Change to your Docker Hub repo
