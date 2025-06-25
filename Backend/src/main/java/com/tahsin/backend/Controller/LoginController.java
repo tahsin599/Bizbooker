@@ -36,6 +36,8 @@ public class LoginController {
     String username = baseUsername;
 
     return username;
+
+    
 }
 
     @PostMapping("/loging")
