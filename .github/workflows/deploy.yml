@@ -387,3 +387,4 @@ jobs:
         run: |
           docker context use default
           docker context rm -f azure-vm 2>/dev/null || true
+          
