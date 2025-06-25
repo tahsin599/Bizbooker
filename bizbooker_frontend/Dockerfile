@@ -62,6 +62,6 @@ COPY . ./
 
 EXPOSE 3000
 
-# Use Vite development command
+
 CMD ["npm", "start"]
 
