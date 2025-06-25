@@ -13,7 +13,7 @@ RUN npm ci --silent --only=production
 COPY . .
 
 # Build the React application
-RUN npm run build
+RUN npm run start
 
 # Production stage
 FROM node:18-alpine AS production
