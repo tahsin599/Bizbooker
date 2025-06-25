@@ -47,3 +47,21 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Serve the application
 CMD ["serve", "-s", "build", "-l", "3000"]
 
+# Development stage
+FROM node:20-slim as development
+
+WORKDIR /app
+
+COPY package*.json ./
+
+# Changed from 'npm ci' to 'npm install' to generate/update package-lock.json if needed
+RUN npm install
+
+# The volume mapping in docker-compose will override this in dev
+COPY . ./
+
+EXPOSE 3000
+
+# Use Vite development command
+CMD ["npm", "run", "dev"] 
+
