@@ -12,8 +12,11 @@ RUN npm ci --silent --only=production
 # Copy source code
 COPY . .
 
-# Build the React application
+# Change this line in your Dockerfile
 RUN npm run build
+
+# To this (increases memory to 4GB)
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # Production stage
 FROM node:18-alpine AS production
