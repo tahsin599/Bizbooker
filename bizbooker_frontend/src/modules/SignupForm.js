@@ -15,6 +15,8 @@ const SignupForm = () => {
   } = useForm();
 
   const onSubmit = async (data) => {
+    const formData = new FormData();
+
     const user = {
       role: data.role.toUpperCase(),
       name: data.fullname,
@@ -23,7 +25,6 @@ const SignupForm = () => {
       bio: data.bio || "",
     };
 
-    const formData = new FormData();
     formData.append("user", new Blob([JSON.stringify(user)], { type: "application/json" }));
 
     if (data.profilepicture && data.profilepicture.length > 0) {
@@ -31,7 +32,9 @@ const SignupForm = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:8081/loging", {
+      // Use environment variable for API URL
+      const apiUrl = process.env.REACT_APP_API_URL ;
+      const response = await fetch(`${apiUrl}/loging`, {
         method: "POST",
         body: formData
       });
