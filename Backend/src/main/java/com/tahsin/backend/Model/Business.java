@@ -212,6 +212,10 @@ public class Business {
     }
    
 
+    public Business(Long businessId) {
+        this.id = businessId;
+    }
+
     @Override
     public String toString() {
         return "Business{" +
@@ -219,6 +223,22 @@ public class Business {
                 ", businessName='" + businessName + '\'' +
                 ", approvalStatus=" + approvalStatus +
                 '}';
+    }
+
+    public byte[] getImageData() {
+        return imageData;
+    }
+
+    public void setImageData(byte[] imageData) {
+        this.imageData = imageData;
+    }
+
+    public List<BusinessHoliday> getHolidays() {
+        return holidays;
+    }
+
+    public void setHolidays(List<BusinessHoliday> holidays) {
+        this.holidays = holidays;
     }
 }
 

@@ -23,6 +23,16 @@ public class ServiceCategory {
     @OneToMany(mappedBy = "category")
     private List<Service> services;
 
+    public ServiceCategory(long l, String string) {
+        //TODO Auto-generated constructor stub
+        this.id = l;
+        this.name = string;
+    }
+
+    public ServiceCategory() {
+        // Default constructor
+    }
+
     public Long getId() {
         return id;
     }

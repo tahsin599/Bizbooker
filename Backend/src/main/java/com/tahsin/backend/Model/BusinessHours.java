@@ -92,6 +92,14 @@ public class BusinessHours {
                 + openTime + ", closeTime=" + closeTime + ", isClosed=" + isClosed + ", tempCloseTime=" + tempCloseTime
                 + ", isTempOn=" + isTempOn + "]";
     }
+    public BusinessHours(Long businessId, Integer dayOfWeek, LocalTime openTime, 
+                    LocalTime closeTime, Boolean isClosed) {
+    this.business = new Business(businessId);
+    this.dayOfWeek = dayOfWeek;
+    this.openTime = openTime;
+    this.closeTime = closeTime;
+    this.isClosed = isClosed;
+}
 
     
 }

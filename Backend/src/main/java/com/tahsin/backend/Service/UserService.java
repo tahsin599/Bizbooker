@@ -2,35 +2,43 @@ package com.tahsin.backend.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.Map;
 
-// import org.apache.catalina.mapper.Mapper;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.tahsin.backend.Model.User;
 import com.tahsin.backend.Repository.UserRepository;
-import com.tahsin.backend.dto.UserProfileDto;
-// import com.tahsin.backend.dto.UserRegistrationDto;
+import com.tahsin.backend.dto.UserProfileDTO;
+import com.tahsin.backend.Model.User;
 
 @Service
-@Component
 public class UserService {
+
     @Autowired
-    private  UserRepository userRepository;
+    UserRepository repo;
+
+    @Autowired
+    private JWTService jwtService;
     
-    private final ModelMapper modelMapper = new ModelMapper();
-    
-    public String register(User user,MultipartFile profilePicture) throws IOException {
-        if(userRepository.existsByEmail(user.getEmail())){
-            return "Email already exists";
 
+    @Autowired
+    AuthenticationManager authmanager;
 
+    private BCryptPasswordEncoder encoder=new BCryptPasswordEncoder(12);
 
-
+    public User register(User user,MultipartFile profilePicture) throws IOException {
+        if (profilePicture == null) {
+            throw new IllegalArgumentException("Profile picture cannot be null");
         }
+        
+        user.setPassword(encoder.encode(user.getPassword()));
+        
 
         user.setImageName(profilePicture.getOriginalFilename());
         user.setImageType(profilePicture.getContentType());
@@ -39,53 +47,53 @@ public class UserService {
         
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-        return "User registered successfully";
-
-
-
-
-
-
-
-
+        repo.save(user);
+        return user;
+        
 
     }
 
-    public UserProfileDto getUserProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public String verify(User user) {
+
+        Authentication authentication=authmanager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+
+        if(authentication.isAuthenticated()){
+            return jwtService.generateToken(user.getUsername());
+        }
         
-        return modelMapper.map(user, UserProfileDto.class);
+        return "failure";
     }
     
-    public String updateUserProfile(Long userId, UserProfileDto userProfileDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        modelMapper.map(userProfileDto, user);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-        
-        return "User profile updated successfully";
-    }  
-    
-    public String deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        userRepository.delete(user);
-        return "User deleted successfully";
+    public User getUserByUsername(String username) {
+        return repo.findByUsername(username);
     }
 
-    public String changePassword(Long userId, String newPassword) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        user.setPassword(newPassword);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-        
-        return "Password changed successfully";
+    public UserProfileDTO  getUserById(Long id) {
+        User user = repo.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        return convertToProfileDTO(user); 
     }
+
+     public UserProfileDTO getUserProfileByToken(String token) {
+        String username = jwtService.extractUsername(token);
+        User user = repo.findByUsername(username);
+                
+
+        return convertToProfileDTO(user);
+    }
+
+    public UserProfileDTO convertToProfileDTO(User user) {
+        String imageData = user.getImageData() != null ? 
+                Base64.getEncoder().encodeToString(user.getImageData()) : null;
+
+        return new UserProfileDTO(
+                user.getId(),
+                user.getName(),
+                user.getBio(),
+                imageData,
+                user.getEmail(),
+                user.getRole().name()
+        );
+    }
+   
+
 }

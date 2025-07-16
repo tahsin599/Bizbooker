@@ -3,6 +3,8 @@ import { Calendar } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from '../config/api';
 import "./LoginForm.css";
 
 const LoginForm = () => {
@@ -11,10 +13,11 @@ const LoginForm = () => {
     handleSubmit,
     formState: { errors }
   } = useForm();
+  const navigate = useNavigate(); // Assuming you have a navigate function from react-router-dom
 
   const onSubmit = async (data) => {
     try {
-      const response = await fetch("http://localhost:8081/login", {
+      const response = await fetch(`${API_BASE_URL}/api/loging`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -24,12 +27,23 @@ const LoginForm = () => {
           password: data.password
         })
       });
+      const responseData = await response.json();
 
       if (response.ok) {
         alert("Login successful!");
+        console.log(responseData.token);
+        console.log(responseData.userId);
+        localStorage.setItem("token", responseData.token);
+        localStorage.setItem("userId", responseData.userId);
+        navigate("/dashboard"); // Assuming you have a navigate function to redirect
       } else {
+        if (response.status === 403) {
+        alert("Please provide valid credentials to login");
+    }
+    else{
         const errText = await response.text();
         alert("Login failed: " + errText);
+    }
       }
     } catch (error) {
       alert("Error occurred: " + error.message);

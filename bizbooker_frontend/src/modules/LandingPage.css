@@ -82,7 +82,7 @@ p {
 }
 
 /* Hero Section */
-.hero-section {
+.hero-sections {
   min-height: calc(100vh - 72px);
   padding: 4rem 2rem;
   display: flex;

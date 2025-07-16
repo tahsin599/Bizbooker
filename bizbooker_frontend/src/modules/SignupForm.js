@@ -3,6 +3,7 @@ import { Calendar } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from '../config/api';
 import "./SignupForm.css";
 import '../styles/variables.css'; // Import your CSS variables
 
@@ -32,9 +33,7 @@ const SignupForm = () => {
     }
 
     try {
-      // Use environment variable for API URL
-      const apiUrl = process.env.REACT_APP_API_URL ;
-      const response = await fetch(`${apiUrl}/loging`, {
+      const response = await fetch(`${API_BASE_URL}/api/register`, {
         method: "POST",
         body: formData
       });
@@ -48,6 +47,11 @@ const SignupForm = () => {
     } catch (error) {
       alert("Error occurred: " + error.message);
     }
+  };
+
+  const handleSocialLogin = (provider) => {
+    // Redirect to your Spring Boot OAuth endpoint
+    window.location.href = `${process.env.REACT_APP_API_URL}/oauth2/authorization/${provider}`;
   };
 
   return (
@@ -84,8 +88,8 @@ const SignupForm = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="form-group">
               <label>I am a</label>
-              <select 
-                {...register("role", { required: true })} 
+              <select
+                {...register("role", { required: true })}
                 className="form-input"
               >
                 <option value="">Select your role</option>
@@ -97,18 +101,18 @@ const SignupForm = () => {
 
             <div className="form-group">
               <label>Full Name</label>
-              <input 
-                {...register("fullname", { required: true })} 
-                className="form-input" 
+              <input
+                {...register("fullname", { required: true })}
+                className="form-input"
               />
               {errors.fullname && <span className="error-message">This field is required</span>}
             </div>
 
             <div className="form-group">
               <label>Email</label>
-              <input 
-                {...register("email", { required: true })} 
-                className="form-input" 
+              <input
+                {...register("email", { required: true })}
+                className="form-input"
               />
               {errors.email && <span className="error-message">This field is required</span>}
             </div>
@@ -116,10 +120,10 @@ const SignupForm = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Password</label>
-                <input 
-                  {...register("password", { required: true })} 
-                  type="password" 
-                  className="form-input" 
+                <input
+                  {...register("password", { required: true })}
+                  type="password"
+                  className="form-input"
                 />
                 {errors.password && <span className="error-message">This field is required</span>}
               </div>
@@ -144,30 +148,31 @@ const SignupForm = () => {
 
             <div className="form-group">
               <label>Bio (Optional)</label>
-              <textarea 
-                {...register("bio")} 
-                rows={3} 
-                className="form-input" 
+              <textarea
+                {...register("bio")}
+                rows={3}
+                className="form-input"
               />
             </div>
 
             <div className="form-group">
-              <label>Profile Picture (Optional)</label>
+              <label>Profile Picture</label>
               <div className="file-input-container">
-                <input 
-                  {...register("profilepicture")} 
-                  type="file" 
-                  accept="image/*" 
+                <input
+                  {...register("profilepicture", { required: true })}
+                  type="file"
+                  accept="image/*"
                   id="profile-picture"
                 />
                 <label htmlFor="profile-picture" className="file-input-label">
                   Choose File
                 </label>
               </div>
+              {errors.profilepicture && <span className="error-message">This field is required</span>}
             </div>
 
-            <motion.button 
-              type="submit" 
+            <motion.button
+              type="submit"
               className="primary-button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -180,18 +185,20 @@ const SignupForm = () => {
             </div>
 
             <div className="social-buttons">
-              <motion.button 
-                type="button" 
+              <motion.button
+                type="button"
                 className="social-button google"
                 whileHover={{ y: -2 }}
+                onClick={() => handleSocialLogin('google')}
               >
                 <FcGoogle className="social-icon" />
                 Google
               </motion.button>
-              <motion.button 
-                type="button" 
-                className="social-button apple"
+              <motion.button
+                type="button"
+                className="social-button github"
                 whileHover={{ y: -2 }}
+                onClick={() => handleSocialLogin('github')}
               >
                 <FaApple className="social-icon" />
                 Apple

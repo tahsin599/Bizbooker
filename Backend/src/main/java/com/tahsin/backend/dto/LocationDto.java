@@ -8,6 +8,6 @@ public record LocationDto(
     String area,
     String city,
     String contactPhone,
-    boolean isPrimary,
-    List<BusinessHoursDto> hours
+    boolean isPrimary
+    //List<BusinessHoursDto> hours
 ) {}

@@ -62,6 +62,15 @@ public class BusinessLocation {
     @OneToOne(mappedBy = "location", cascade = CascadeType.ALL)
     private SlotConfiguration slotConfiguration;
 
+    public BusinessLocation(Long locationId) {
+        //TODO Auto-generated constructor stub
+        this.id = locationId;
+    }
+
+    public BusinessLocation() {
+        //TODO Auto-generated constructor stub
+    }
+
     public Long getId() {
         return id;
     }

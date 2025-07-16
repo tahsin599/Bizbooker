@@ -9,7 +9,16 @@ import AboutUs from './modules/AboutUs';
 import Dashboard from './modules/DashBoard';
 import CreateBusiness from './modules/CreateBusiness';
 import BusinessService from './modules/BusinessService';
-
+import OAuthCallback from './modules/OauthCallBack';
+import UserBusinesses from './modules/UserBusinesses';
+import BusinessDetailPage from './modules/BusinessDetailPage';
+import AddLocationPage from './modules/AddLocationPage'; // Import the AddLocationPage component
+import LocationImagesPage from './modules/LocationImagesPage'; // Import the LocationImagesPage component
+import BusinessListingPage from './modules/BusinessListingPage';
+import BusinessHoursConfig from './modules/BusinessHoursConfig';
+import ErrorBoundary from './modules/ErrorBoundary'; // Import the ErrorBoundary component
+import CategoryBusinessListingPage from './modules/CategoryBusinessListingPage'; // Import the CategoryBusinessListingPage component
+import NoBusinessesFound from './modules/NoBusinessesFound';
 function App() {
   return (
     <BrowserRouter>
@@ -22,10 +31,27 @@ function App() {
           <Route path="/about" element={<><Navbar isAuthenticated={false} /><AboutUs /><Footer /></>} />
           <Route path="/dashboard" element={<><Navbar isAuthenticated={true} /><Dashboard /><Footer /></>} />
           <Route path="/create-business" element={<><Navbar isAuthenticated={true} /><CreateBusiness /><Footer /></>} />
-          <Route path="/business-service" element={<><Navbar isAuthenticated={true} /><BusinessService /><Footer   /></>} />
+          <Route path="/business-service" element={<><Navbar isAuthenticated={true} /><BusinessService /><Footer /></>} />
+          <Route path="/oauth/callback" element={<OAuthCallback />} />
+          <Route path="/userBusiness" element={<><Navbar isAuthenticated={true} /><UserBusinesses /><Footer /></>} />
+          <Route path="/business/:id" element={<><Navbar isAuthenticated={true} /><BusinessDetailPage /><Footer /></>} />
+          <Route path="/business/:businessId/add-location" element={<><Navbar isAuthenticated={true}/><AddLocationPage /><Footer /></>} />
+          <Route path="/locations/:locationId/images" element={<><Navbar isAuthenticated={true} /><LocationImagesPage /><Footer /></>} />
+          <Route path="/business/customer" element={<><Navbar isAuthenticated={true}/><BusinessListingPage /><Footer/></>} />
+          <Route path="/business/customer/:businessId" element={<><Navbar/><BusinessService /><Footer/></>} />
+          <Route path="/business/category/:categoryId" element={<><Navbar /><CategoryBusinessListingPage /><Footer /></>} />
+          <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
+          <Route
+            path="/business-hours/:businessId"
+            element={
+              <ErrorBoundary>
+                <BusinessHoursConfig />
+              </ErrorBoundary>
+            }
+          />
 
           {/* Add more routes as needed */}
-          
+
         </Routes>
         {/* <Footer /> */}
       </div>

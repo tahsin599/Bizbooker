@@ -36,6 +36,7 @@ public class SlotConfiguration {
     private LocalTime endTime = LocalTime.of(17, 0);
 
     private LocalDate lastResetDate;
+    private Integer slotDuration = 30;
 
     public Long getId() {
         return id;
@@ -98,6 +99,13 @@ public class SlotConfiguration {
         return "SlotConfiguration [id=" + id + ", location=" + location + ", maxSlotsPerInterval=" + maxSlotsPerInterval
                 + ", usedSlots=" + usedSlots + ", startTime=" + startTime + ", endTime=" + endTime + ", lastResetDate="
                 + lastResetDate + "]";
+    }
+      public Integer getSlotDuration() {
+        return slotDuration;
+    }
+
+    public void setSlotDuration(Integer slotDuration) {
+        this.slotDuration = slotDuration;
     }
 
     // Getters, setters, constructors
