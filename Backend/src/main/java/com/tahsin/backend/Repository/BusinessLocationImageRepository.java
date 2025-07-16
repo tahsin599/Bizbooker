@@ -1,27 +1,43 @@
 package com.tahsin.backend.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.tahsin.backend.Model.BusinessLocationImage;
+import com.tahsin.backend.dto.BusinessLocationDataDTO;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
-import com.tahsin.backend.Model.BusinessLocation;
-import com.tahsin.backend.Model.BusinessLocationImage;
+import java.util.List;
 
 @Repository
-@Component
 public interface BusinessLocationImageRepository extends JpaRepository<BusinessLocationImage, Long> {
-    List<BusinessLocationImage> findByLocation(BusinessLocation location);
-    
-    @Query("SELECT bli FROM BusinessLocationImage bli WHERE bli.location.id = :locationId AND bli.isPrimary = true")
-    Optional<BusinessLocationImage> findPrimaryImage(@Param("locationId") Long locationId);
-    
+
+    // Find all images for a specific location
+    List<BusinessLocationImage> findByLocationId(Long locationId);
+
+    // Find primary image for a location (if exists)
+    BusinessLocationImage findByLocationIdAndIsPrimary(Long locationId, Boolean isPrimary);
+
+    // Count images for a location
+    long countByLocationId(Long locationId);
+
+    // Delete all images for a location
     @Modifying
-    @Query("UPDATE BusinessLocationImage bli SET bli.isPrimary = false WHERE bli.location.id = :locationId")
-    void clearPrimaryImages(@Param("locationId") Long locationId);
+    @Query("DELETE FROM BusinessLocationImage i WHERE i.location.id = :locationId")
+    void deleteAllByLocationId(Long locationId);
+
+    // Set all images as non-primary for a location
+    @Modifying
+    @Query("UPDATE BusinessLocationImage i SET i.isPrimary = false WHERE i.location.id = :locationId")
+    void unsetPrimaryImages(Long locationId);
+
+    // Find images by type (optional)
+    List<BusinessLocationImage> findByImageType(String imageType);
+
+    @Query("SELECT new com.tahsin.backend.dto.BusinessLocationDataDTO(bli.imageName, bli.imageData, bli.imageType,bli.id) " +
+           "FROM BusinessLocationImage bli " +
+           "WHERE bli.location.id = :locationId")
+    List<BusinessLocationDataDTO> findImageDataByLocationId(@Param("locationId") Long locationId);
 }

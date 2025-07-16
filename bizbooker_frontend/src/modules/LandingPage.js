@@ -36,7 +36,7 @@ const LandingPage = () => {
   return (
     <div className="landing-page">
       {/* Hero Section */}
-      <section className="hero-section">
+      <section className="hero-sections">
         <div className="hero-content">
           <motion.div
             initial="hidden"

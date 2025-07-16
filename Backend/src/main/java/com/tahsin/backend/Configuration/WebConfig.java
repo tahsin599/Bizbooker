@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig {
-    @Value("${frontend.url}")
+    @Value("${FRONTEND_URL}")
     private String frontendUrl;
     @Bean public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -17,7 +17,8 @@ public class WebConfig {
                         .allowedOrigins(frontendUrl)
                         .allowedMethods("GET","POST","PUT","DELETE","OPTIONS","PATCH")
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowCredentials(true)
+                        .exposedHeaders("Authorization", "Content-Type", "X-Requested-With");
             }
         };
     }

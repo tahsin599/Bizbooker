@@ -32,4 +32,51 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     
     @Query("SELECT a FROM Appointment a WHERE a.business.id = :businessId AND a.status = 'COMPLETED'")
     List<Appointment> findCompletedAppointmentsByBusiness(@Param("businessId") Long businessId);
+
+    // Dashboard-specific query methods
+    
+    /**
+     * Count today's appointments for a specific user using explicit date range
+     */
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.customer.id = :userId AND a.startTime >= :startOfDay AND a.startTime < :endOfDay")
+    int countTodayAppointmentsByUser(@Param("userId") Long userId, @Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
+    
+    /**
+     * Count this month's appointments for a specific user
+     */
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.customer.id = :userId AND MONTH(a.startTime) = MONTH(CURRENT_DATE) AND YEAR(a.startTime) = YEAR(CURRENT_DATE)")
+    int countMonthlyAppointmentsByUser(@Param("userId") Long userId);
+    
+    /**
+     * Count total appointments for a specific user
+     */
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.customer.id = :userId")
+    int countTotalAppointmentsByUser(@Param("userId") Long userId);
+    
+    /**
+     * Count pending appointments for a specific user
+     */
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.customer.id = :userId AND a.status = 'PENDING'")
+    int countPendingAppointmentsByUser(@Param("userId") Long userId);
+    
+    /**
+     * Find today's appointments for a specific user using explicit date range
+     * This ensures proper timezone handling and accurate date filtering
+     */
+    @Query("SELECT a FROM Appointment a WHERE a.customer.id = :userId AND a.startTime >= :startOfDay AND a.startTime < :endOfDay ORDER BY a.startTime")
+    List<Appointment> findTodayAppointmentsByUser(@Param("userId") Long userId, @Param("startOfDay") LocalDateTime startOfDay, @Param("endOfDay") LocalDateTime endOfDay);
+    
+    /**
+     * Find all appointments for a specific user
+     */
+    @Query("SELECT a FROM Appointment a WHERE a.customer.id = :userId ORDER BY a.startTime DESC")
+    List<Appointment> findAllAppointmentsByUser(@Param("userId") Long userId);
+    
+    /**
+     * Find appointments by status for a specific user
+     */
+    @Query("SELECT a FROM Appointment a WHERE a.customer.id = :userId AND a.status = :status ORDER BY a.startTime DESC")
+    List<Appointment> findAppointmentsByUserAndStatus(@Param("userId") Long userId, @Param("status") String status);
+
+    //int countByLocationIdAndDateAndTime(Long locationId, LocalDate date, String time);
 }

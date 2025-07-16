@@ -35,5 +35,52 @@ public class Service {
     @OneToMany(mappedBy = "service")
     private List<Appointment> appointments;
 
-    
+    // Constructors
+    public Service() {
+    }
+
+    public Service(String name) {
+        this.name = name;
+    }
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public ServiceCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(ServiceCategory category) {
+        this.category = category;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Set<Business> getBusinesses() {
+        return businesses;
+    }
+
+    public void setBusinesses(Set<Business> businesses) {
+        this.businesses = businesses;
+    }
+
+    public List<Appointment> getAppointments() {
+        return appointments;
+    }
+
+    public void setAppointments(List<Appointment> appointments) {
+        this.appointments = appointments;
+    }
 }

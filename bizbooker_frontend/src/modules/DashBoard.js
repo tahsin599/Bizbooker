@@ -1,55 +1,222 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 import './DashBoard.css';
 import Navbar from './Navbar';
 import ScheduleList from './List';
-import { Calendar, Users, Home, MessageSquare, CreditCard, Settings, Plus, FileText, User, Shield, Search, ArrowRight } from 'lucide-react';
+import { 
+  Calendar, Users, Home, MessageSquare, CreditCard, 
+  Settings, Plus, FileText, User, Shield, Search, ArrowRight,
+  Briefcase, Dumbbell, HeartPulse, Utensils, GraduationCap, ArrowLeft
+} from 'lucide-react';
 
 const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Sample schedule data - replace with your actual data
-  const schedules = [
-    {
-      id: 1,
-      time: '10:00 AM',
-      name: 'Doctor Appointment',
-      date: '2024-01-15'
-    },
-    {
-      id: 2,
-      time: '2:30 PM', 
-      name: 'Hair Salon',
-      date: '2024-01-16'
-    },
-    {
-      id: 3,
-      time: '11:00 AM',
-      name: 'Restaurant Booking',
-      date: '2024-01-17'
-    }
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    todayBookings: 0,
+    monthlyBookings: 0,
+    totalBookings: 0,
+    pendingRequests: 0
+  });
+  const [todaysAppointments, setTodaysAppointments] = useState([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Service types configuration
+  const serviceTypes = [
+    { name: 'Professional Services', icon: <Briefcase size={20} />, color: '#4895ef' },
+    { name: 'Fitness', icon: <Dumbbell size={20} />, color: '#3b56d4' },
+    { name: 'HealthCare', icon: <HeartPulse size={20} />, color: '#4361ee' },
+    { name: 'Restaurant & Food', icon: <Utensils size={20} />, color: '#4895ef' },
+    { name: 'Education', icon: <GraduationCap size={20} />, color: '#3a0ca3' }
   ];
 
-  const services = [
-    { name: 'Profile', icon: <User size={20} />, color: '#4361ee' },
-    { name: 'Security', icon: <Shield size={20} />, color: '#4895ef' },
-    { name: 'Support', icon: <Shield size={20} />, color: '#3b56d4' },
-    { name: 'Medical', icon: <Shield size={20} />, color: '#4361ee' },
-    { name: 'Home', icon: <Home size={20} />, color: '#4895ef' },
-    { name: 'Chat', icon: <MessageSquare size={20} />, color: '#3a0ca3' },
-    { name: 'Bookings', icon: <Calendar size={20} />, color: '#4361ee' },
-    { name: 'Payment', icon: <CreditCard size={20} />, color: '#3b56d4' },
-    { name: 'Settings', icon: <Settings size={20} />, color: '#4895ef' }
-  ];
+  // Fetch dashboard statistics
+  const fetchDashboardStats = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    
+    if (!token || !userId) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/user/${userId}/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const stats = await response.json();
+        setDashboardStats(stats);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  // Fetch today's appointments
+  const fetchTodaysAppointments = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    
+    if (!token || !userId) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/user/${userId}/appointments/today`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const appointments = await response.json();
+        const transformedAppointments = appointments.map(apt => ({
+          id: apt.id,
+          time: apt.formattedTime,
+          name: apt.appointmentTitle,
+          date: apt.formattedFullDate,
+          status: apt.status,
+          businessName: apt.businessName,
+          serviceName: apt.serviceName,
+          locationAddress: apt.locationAddress
+        }));
+        setTodaysAppointments(transformedAppointments);
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  }, []);
+
+  // Fetch categories from API
+  const fetchCategories = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/customer/businesses/categories`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const categoriesData = await response.json();
+        setCategories(categoriesData);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setServicesLoading(false);
+    }
+  }, []);
+
+  // Combine service types with actual category IDs
+  const getServices = () => {
+    const defaultServices = [
+      { name: 'Profile', icon: <User size={20} />, color: '#4361ee', path: '/profile' },
+      { name: 'Bookings', icon: <Calendar size={20} />, color: '#4361ee', path: '/bookings' },
+      { name: 'Payment', icon: <CreditCard size={20} />, color: '#3b56d4', path: '/payment' },
+      { name: 'Settings', icon: <Settings size={20} />, color: '#4895ef', path: '/settings' }
+    ];
+
+    const categoryServices = serviceTypes.map(service => {
+      const category = categories.find(cat => 
+        cat.name.toLowerCase().includes(service.name.toLowerCase()) ||
+        service.name.toLowerCase().includes(cat.name.toLowerCase())
+      );
+      
+      return {
+        ...service,
+        categoryId: category?.id,
+        path: category ? undefined : '/explore'
+      };
+    });
+
+    return [...categoryServices, ...defaultServices];
+  };
+
+  // Handle service click
+  const handleServiceClick = (service) => {
+    if (service.path) {
+      navigate(service.path);
+    } else if (service.categoryId) {
+      navigate(`/business/category/${service.categoryId}`);
+    } else {
+      navigate('/business');
+    }
+  };
 
   const handleCreateBusiness = () => {
-    window.location.href = '/create-business';
+    navigate('/create-business');
   };
+
+  const handleMyBusinesses = () => {
+    navigate('/userBusiness');
+  };
+
+  // Verify authentication and fetch data
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/user`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          setIsAuthenticated(true);
+          fetchCategories();
+          fetchDashboardStats();
+          fetchTodaysAppointments();
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('userId');
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error verifying token:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyToken();
+  }, [navigate, fetchCategories, fetchDashboardStats, fetchTodaysAppointments]);
+
+  if (isLoading) {
+    return <div className="loading-container">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="dashboard-container">
       <Navbar />
       
-      {/* Main Content */}
       <div className="dashboard-content">
         {/* Welcome Section */}
         <div className="welcome-section">
@@ -61,12 +228,22 @@ const Dashboard = () => {
               </div>
               <div className="welcome-stats">
                 <div className="stat-item">
-                  <div className="stat-number">12</div>
+                  <div className="stat-number">
+                    {statsLoading ? '...' : dashboardStats.todayBookings}
+                  </div>
                   <div className="stat-label">Today's Bookings</div>
                 </div>
                 <div className="stat-item">
-                  <div className="stat-number">248</div>
-                  <div className="stat-label">Total This Month</div>
+                  <div className="stat-number">
+                    {statsLoading ? '...' : dashboardStats.monthlyBookings}
+                  </div>
+                  <div className="stat-label">This Month</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">
+                    {statsLoading ? '...' : dashboardStats.pendingRequests}
+                  </div>
+                  <div className="stat-label">Pending</div>
                 </div>
               </div>
             </div>
@@ -103,7 +280,7 @@ const Dashboard = () => {
               <div className="action-icon" style={{backgroundColor: '#8b5cf6'}}>
                 <Home size={24} />
               </div>
-              <span>Create Your Business Profile</span>
+              <span>Create Business</span>
             </div>
             <div className="quick-action-card">
               <div className="action-icon" style={{backgroundColor: '#10b981'}}>
@@ -111,11 +288,11 @@ const Dashboard = () => {
               </div>
               <span>Manage Clients</span>
             </div>
-            <div className="quick-action-card">
+            <div className="quick-action-card" onClick={handleMyBusinesses}>
               <div className="action-icon" style={{backgroundColor: '#f59e0b'}}>
                 <FileText size={24} />
               </div>
-              <span>View Reports</span>
+              <span>My Businesses</span>
             </div>
             <div className="quick-action-card">
               <div className="action-icon" style={{backgroundColor: '#ef4444'}}>
@@ -129,27 +306,58 @@ const Dashboard = () => {
         {/* Services Grid */}
         <div className="services-section">
           <h3>Popular Services</h3>
-          <div className="services-grid">
-            {services.map((service, index) => (
-              <div key={index} className="service-card">
-                <div className="service-icon" style={{backgroundColor: service.color}}>
-                  {service.icon}
+          {servicesLoading ? (
+            <div className="services-loading">
+              <div className="loading-spinner"></div>
+              <p>Loading services...</p>
+            </div>
+          ) : (
+            <div className="services-grid">
+              {getServices().map((service, index) => (
+                <div 
+                  key={index} 
+                  className="service-card"
+                  onClick={() => handleServiceClick(service)}
+                >
+                  <div className="service-icon" style={{backgroundColor: service.color}}>
+                    {service.icon}
+                  </div>
+                  <span className="service-name">{service.name}</span>
+                  {service.categoryId && (
+                    <span className="service-badge">Category</span>
+                  )}
                 </div>
-                <span className="service-name">{service.name}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Schedule Section */}
         <div className="schedule-section">
           <div className="section-header">
-            <h3>Your Schedule</h3>
-            <button className="view-all-btn">
+            <h3>Today's Appointments</h3>
+            <button className="view-all-btn" onClick={() => navigate('/bookings')}>
               View All <ArrowRight size={16} />
             </button>
           </div>
-          <ScheduleList schedules={schedules} />
+          {appointmentsLoading ? (
+            <div className="loading-schedule">
+              <div className="loading-spinner"></div>
+              <p>Loading appointments...</p>
+            </div>
+          ) : todaysAppointments.length > 0 ? (
+            <ScheduleList schedules={todaysAppointments} />
+          ) : (
+            <div className="no-appointments">
+              <p>No appointments scheduled for today</p>
+              <button 
+                className="book-now-btn"
+                onClick={() => navigate('/business')}
+              >
+                <Plus size={16} /> Book Now
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
