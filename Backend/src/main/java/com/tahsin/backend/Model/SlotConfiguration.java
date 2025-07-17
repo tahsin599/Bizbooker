@@ -2,13 +2,16 @@ package com.tahsin.backend.Model;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
@@ -37,6 +40,16 @@ public class SlotConfiguration {
 
     private LocalDate lastResetDate;
     private Integer slotDuration = 30;
+    @OneToMany(mappedBy = "configuration", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SlotInterval> intervals;
+
+    public List<SlotInterval> getIntervals() {
+        return intervals;
+    }
+
+    public void setIntervals(List<SlotInterval> intervals) {
+        this.intervals = intervals;
+    }
 
     public Long getId() {
         return id;

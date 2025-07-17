@@ -1,15 +1,15 @@
 package com.tahsin.backend.dto;
 
-import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class SlotConfigDTO {
     private Long locationId;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private Integer slotDuration;
     private Integer maxSlotsPerInterval;
-    private Integer usedSlots;
-    private String startTime;
-    private String endTime;
-    private String lastResetDate;
     
+
     // Getters and Setters
     public Long getLocationId() {
         return locationId;
@@ -17,34 +17,28 @@ public class SlotConfigDTO {
     public void setLocationId(Long locationId) {
         this.locationId = locationId;
     }
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+    public Integer getSlotDuration() {
+        return slotDuration;
+    }
+    public void setSlotDuration(Integer slotDuration) {
+        this.slotDuration = slotDuration;
+    }
     public Integer getMaxSlotsPerInterval() {
         return maxSlotsPerInterval;
     }
     public void setMaxSlotsPerInterval(Integer maxSlotsPerInterval) {
         this.maxSlotsPerInterval = maxSlotsPerInterval;
-    }
-    public Integer getUsedSlots() {
-        return usedSlots;
-    }
-    public void setUsedSlots(Integer usedSlots) {
-        this.usedSlots = usedSlots;
-    }
-    public String getStartTime() {
-        return startTime;
-    }
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
-    }
-    public String getEndTime() {
-        return endTime;
-    }
-    public void setEndTime(String endTime) {
-        this.endTime = endTime;
-    }
-    public String getLastResetDate() {
-        return lastResetDate;
-    }
-    public void setLastResetDate(String lastResetDate) {
-        this.lastResetDate = lastResetDate;
     }
 }
