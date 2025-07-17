@@ -264,6 +264,12 @@ const BusinessDetailPage = () => {
                         >
                           <Image size={16} /> Images
                         </button>
+                        <button
+                          className="hours-button"
+                          onClick={() => navigate(`/locations/${location.locationId}/hours`)}
+                        >
+                          <Plus size={16} /> Business Hours
+                        </button>
                         {!location.isPrimary && (
                           <button className="delete-button">
                             <Trash2 size={16} /> Remove

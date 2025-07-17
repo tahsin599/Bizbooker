@@ -19,6 +19,7 @@ import BusinessHoursConfig from './modules/BusinessHoursConfig';
 import ErrorBoundary from './modules/ErrorBoundary'; // Import the ErrorBoundary component
 import CategoryBusinessListingPage from './modules/CategoryBusinessListingPage'; // Import the CategoryBusinessListingPage component
 import NoBusinessesFound from './modules/NoBusinessesFound';
+import BusinessConfig from './modules/BusinessConfig';
 function App() {
   return (
     <BrowserRouter>
@@ -41,6 +42,7 @@ function App() {
           <Route path="/business/customer/:businessId" element={<><Navbar/><BusinessService /><Footer/></>} />
           <Route path="/business/category/:categoryId" element={<><Navbar /><CategoryBusinessListingPage /><Footer /></>} />
           <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
+          <Route path="/business/config" element={<><BusinessConfig /></>} /> 
           <Route
             path="/business-hours/:businessId"
             element={
