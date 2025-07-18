@@ -315,6 +315,91 @@
   box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
 }
 
+/* View Details Button */
+.view-details-btn {
+  padding: 0.5rem 1rem;
+  background: #4361ee;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.view-details-btn:hover {
+  background: #3b4fd8;
+  transform: translateY(-1px);
+}
+
+/* Status Badge Styles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-badge.confirmed {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.status-badge.pending {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+
+.status-badge.cancelled {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.status-badge.completed {
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+
+/* Modal Styles (matching BusinessService.js) */
+.booking-summary {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+}
+
+.booking-summary h3 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+  font-size: 1.25rem;
+}
+
+.summary-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.summary-detail:last-child {
+  border-bottom: none;
+}
+
+.summary-detail strong {
+  color: #4b5563;
+  font-weight: 600;
+}
+
 /* Loading Styles */
 .loading-schedule {
   display: flex;

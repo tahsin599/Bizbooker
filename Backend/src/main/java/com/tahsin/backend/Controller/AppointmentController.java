@@ -1,0 +1,96 @@
+package com.tahsin.backend.Controller;
+
+import com.tahsin.backend.Model.*;
+import com.tahsin.backend.Repository.BusinessLocationRepository;
+import com.tahsin.backend.Repository.BusinessRepository;
+import com.tahsin.backend.Repository.SlotIntervalRepository;
+import com.tahsin.backend.Repository.UserRepository;
+import com.tahsin.backend.Service.*;
+import com.tahsin.backend.dto.AppointmentDTO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+
+@RestController
+@RequestMapping("/api/appointments")
+public class AppointmentController {
+
+    @Autowired
+    private AppointmentService appointmentService;
+
+    @Autowired
+    private UserRepository userService;
+
+    @Autowired
+    private BusinessRepository businessService;
+
+    @Autowired
+    private BusinessLocationRepository locationService;
+
+    @Autowired
+    private SlotIntervalRepository repo;
+
+    
+
+    
+
+    @PostMapping
+    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentDTO appointmentDTO) {
+        try {
+            // Validate required fields
+            if (appointmentDTO.getCustomerId() == null ||
+                appointmentDTO.getBusinessId() == null ||
+                appointmentDTO.getLocationId() == null ||
+                appointmentDTO.getStartTime() == null ||
+                appointmentDTO.getEndTime() == null) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Fetch related entities
+            User customer = userService.findById(appointmentDTO.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+            Business business = businessService.findById(appointmentDTO.getBusinessId())
+                .orElseThrow(() -> new RuntimeException("Business not found"));
+            BusinessLocation location = locationService.findById(appointmentDTO.getLocationId())
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+
+            // Create new appointment
+            Appointment appointment = new Appointment();
+            appointment.setCustomer(customer);
+            appointment.setBusiness(business);
+            appointment.setLocation(location);
+            appointment.setStartTime(appointmentDTO.getStartTime());
+            appointment.setEndTime(appointmentDTO.getEndTime());
+            appointment.setStatus(AppointmentStatus.PENDING);
+            
+            repo.findByConfigurationIdAndStartTime(
+                    appointmentDTO.getConfigId(),
+                    appointmentDTO.getStartTime().toLocalTime())
+                .ifPresent(interval -> {
+                    
+                    interval.setUsedSlots(interval.getUsedSlots() + appointmentDTO.getUserSelectedCount());
+                    repo.save(interval);
+                });
+
+            
+            // Set optional service if provided
+           
+
+            // Set optional notes if provided
+            if (appointmentDTO.getNotes() != null) {
+                appointment.setNotes(appointmentDTO.getNotes());
+            }
+
+            // Save the appointment
+            Appointment savedAppointment = appointmentService.save(appointment);
+
+            return ResponseEntity.ok(savedAppointment);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+
+}

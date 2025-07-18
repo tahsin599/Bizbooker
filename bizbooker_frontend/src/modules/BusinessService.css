@@ -578,6 +578,274 @@
   }
 }
 
+/* Location Selection Styles */
+.location-selection {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.location-options {
+  margin-top: 15px;
+}
+
+.location-option {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.location-summary {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  background: #fff;
+}
+
+.location-summary svg {
+  margin-right: 10px;
+  color: #666;
+}
+
+.location-summary .expand-icon {
+  margin-left: auto;
+}
+
+.location-details {
+  padding: 15px;
+  background: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.detail-row span {
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.detail-row p {
+  margin: 0;
+}
+
+.select-location-btn {
+  margin-top: 15px;
+  padding: 8px 15px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+
+.select-location-btn:hover {
+  background: #40a9ff;
+}
+
+/* Calendar Day Status Styles */
+.day-status {
+  font-size: 10px;
+  margin-top: 2px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.day-status.closed {
+  background: #ffccc7;
+  color: #d32f2f;
+}
+
+.day-status.no-slots {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+/* Location Card Styles */
+.view-schedule-btn {
+  margin-top: 15px;
+  padding: 8px 15px;
+  background: #52c41a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.view-schedule-btn svg {
+  margin-right: 8px;
+}
+
+.view-schedule-btn:hover {
+  background: #73d13d;
+}
+
+/* Selected Location Style */
+.location-option.selected {
+  border-color: #1890ff;
+  background-color: #e6f7ff;
+}
+
+/* Closed Day Style */
+.calendar-day.closed {
+  background-color: #fff1f0;
+  color: #a61d24;
+  cursor: not-allowed;
+}
+
+.calendar-day.closed:hover {
+  background-color: #fff1f0;
+}
+
+/* Selected Slots Summary */
+.selected-slots-summary {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.selected-slots-summary h4 {
+  margin-bottom: 10px;
+}
+
+.selected-slots-summary ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.selected-slots-summary li {
+  padding: 5px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.selected-slots-summary li:last-child {
+  border-bottom: none;
+}
+
+/* Time Slot Selection */
+.time-slot-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.toggle-slot-btn {
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.toggle-slot-btn:hover {
+  background: #40a9ff;
+}
+
+.time-slot-detailed.selected {
+  background-color: #e6f7ff;
+  border-color: #1890ff;
+}
+
+/* Booking Confirmation Modal */
+.booking-confirmation-details {
+  padding: 10px;
+}
+
+.booking-detail {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.booking-detail svg {
+  margin-right: 10px;
+  color: #666;
+}
+
+.booked-slots-list {
+  list-style: none;
+  padding: 0;
+}
+
+.booked-slots-list li {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.booked-slots-list li svg {
+  margin-right: 10px;
+}
+
+.booking-reference {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 14px;
+  color: #666;
+}
+
+.modal-close-btn {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-print-btn {
+  padding: 8px 16px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.modal-print-btn:hover {
+  background: #40a9ff;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .ant-modal-content, 
+  .ant-modal-content * {
+    visibility: visible;
+  }
+  .ant-modal-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .ant-modal-footer {
+    display: none;
+  }
+}
+
 /* Pulse Animations */
 @keyframes pulse {
   0% {
@@ -883,3 +1151,54 @@
     font-size: 1.1rem;
   }
 }
+
+/* Add to BusinessService.css */
+
+/* Fully booked slots */
+.time-slot-detailed.fully-booked {
+  background-color: #ffeeee;
+  border-color: #ffcccc;
+  color: #cc0000;
+  cursor: not-allowed;
+}
+
+.time-slot-detailed.fully-booked .status-badge {
+  background-color: #ffcccc;
+  color: #cc0000;
+}
+
+.time-slot-detailed.fully-booked .available-count {
+  color: #cc0000;
+}
+
+/* Booking confirmation modal */
+.booking-summary {
+  padding: 15px;
+}
+
+.summary-detail {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.confirmation-message {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  font-style: italic;
+}
+
+.modal-ok-btn {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-ok-btn:hover {
+  background-color: #40a9ff;
+}
+

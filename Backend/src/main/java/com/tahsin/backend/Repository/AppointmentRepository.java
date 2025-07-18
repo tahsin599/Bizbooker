@@ -79,4 +79,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findAppointmentsByUserAndStatus(@Param("userId") Long userId, @Param("status") String status);
 
     //int countByLocationIdAndDateAndTime(Long locationId, LocalDate date, String time);
+
+
+    @Query("SELECT a FROM Appointment a WHERE " +
+           "(a.status = 'PENDING' OR a.status = 'CONFIRMED') AND " +
+           "a.endTime < :currentTime")
+    List<Appointment> findAppointmentsToComplete(@Param("currentTime") LocalDateTime currentTime);
 }

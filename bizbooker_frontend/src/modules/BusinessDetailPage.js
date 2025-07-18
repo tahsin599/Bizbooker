@@ -8,6 +8,16 @@ import { API_BASE_URL } from '../config/api';
 import Navbar from './Navbar';
 import './BusinessDetail.css';
 
+const dayOfWeekMap = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday'
+};
+
 const BusinessDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,6 +27,8 @@ const BusinessDetailPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [showEditHours, setShowEditHours] = useState(false);
+  const [businessHours, setBusinessHours] = useState(null);
+  const [hoursLoading, setHoursLoading] = useState(true);
   const token = localStorage.getItem('token');
 
   const getImageUrl = (imageData, imageType) => {
@@ -42,6 +54,13 @@ const BusinessDetailPage = () => {
     return window.btoa(binary);
   };
 
+  const handleHoursClick = () => {
+
+    navigate(`/business/config/${id}`);
+    // setShowEditHours(true); // Uncomment if you want to show edit hours modal instead`);
+  }
+
+
   useEffect(() => {
     const fetchBusinessDetails = async () => {
       try {
@@ -55,6 +74,7 @@ const BusinessDetailPage = () => {
         if (!response.ok) throw new Error(`Failed to fetch business: ${response.status}`);
         
         const data = await response.json();
+        console.log('Business Data:', data);
         setBusiness(data);
       } catch (error) {
         console.error('Error fetching business:', error);
@@ -67,6 +87,28 @@ const BusinessDetailPage = () => {
     if (token) fetchBusinessDetails();
     else navigate('/login');
   }, [id, token, navigate]);
+
+  // Fetch business hours for the business
+  useEffect(() => {
+    const fetchBusinessHours = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/business-hours/${id}/weekly`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch business hours');
+        const data = await response.json();
+        setBusinessHours(data);
+      } catch (err) {
+        setBusinessHours([]);
+      } finally {
+        setHoursLoading(false);
+      }
+    };
+    if (token) fetchBusinessHours();
+  }, [id, token]);
 
   if (loading) {
     return (
@@ -294,19 +336,36 @@ const BusinessDetailPage = () => {
             <div className="hours-tab">
               <div className="section-header">
                 <h2>Business Hours</h2>
-                <button className="edit-button" onClick={() => setShowEditHours(true)}>
-                  <Edit size={16} /> Edit Hours
-                </button>
+                {businessHours && businessHours.length > 0 && (
+                  <button className="edit-button" onClick={() => setShowEditHours(true)}>
+                    <Edit size={16} /> Edit Hours
+                  </button>
+                )}
               </div>
 
-              <div className="hours-card">
-                {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(day => (
-                  <div key={day} className="hours-row">
-                    <span>{day}</span>
-                    <span>{day === 'Saturday' || day === 'Sunday' ? 'Closed' : '9:00 AM - 5:00 PM'}</span>
-                  </div>
-                ))}
-              </div>
+              {hoursLoading ? (
+                <div>Loading hours...</div>
+              ) : businessHours && businessHours.length > 0 ? (
+                <div className="hours-card">
+                  {businessHours.map((hour, idx) => (
+                    <div key={hour.dayOfWeek || idx} className="hours-row">
+                      <span>{dayOfWeekMap[hour.dayOfWeek] || hour.dayOfWeek}</span>
+                      <span>
+                        {hour.isClosed
+                          ? 'Closed'
+                          : `${hour.openTime} - ${hour.closeTime}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <p>No business hours configured yet.</p>
+                  <button className="add-button" onClick={handleHoursClick}>
+                    <Plus size={16} /> Configure Hours
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
