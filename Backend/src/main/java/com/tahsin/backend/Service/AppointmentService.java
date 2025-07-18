@@ -15,5 +15,10 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
+    public Appointment getById(Long id) {
+        return appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+    }
+
     // Additional service methods would go here...
 }
