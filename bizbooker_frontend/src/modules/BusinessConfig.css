@@ -68,3 +68,24 @@
   font-size: 18px;
   font-weight: 600;
 }
+
+.success-summary {
+  padding: 10px;
+}
+
+.success-summary h3 {
+  margin-top: 20px;
+  color: #1890ff;
+}
+
+.success-summary ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.slot-config-summary {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 10px;
+}

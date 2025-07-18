@@ -9,6 +9,7 @@ import {
   Settings, Plus, FileText, User, Shield, Search, ArrowRight,
   Briefcase, Dumbbell, HeartPulse, Utensils, GraduationCap, ArrowLeft
 } from 'lucide-react';
+import { Modal } from 'antd';
 
 const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,6 +26,8 @@ const Dashboard = () => {
   const [appointmentsLoading, setAppointmentsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const navigate = useNavigate();
 
   // Service types configuration
@@ -79,16 +82,43 @@ const Dashboard = () => {
 
       if (response.ok) {
         const appointments = await response.json();
-        const transformedAppointments = appointments.map(apt => ({
-          id: apt.id,
-          time: apt.formattedTime,
-          name: apt.appointmentTitle,
-          date: apt.formattedFullDate,
-          status: apt.status,
-          businessName: apt.businessName,
-          serviceName: apt.serviceName,
-          locationAddress: apt.locationAddress
-        }));
+        const transformedAppointments = appointments.map(apt => {
+          // Parse the dates properly
+          const startTime = apt.startTime ? new Date(apt.startTime) : null;
+          
+          return {
+            id: apt.id,
+            appointmentTitle: apt.appointmentTitle || 'Appointment',
+            // Format time for display in list
+            time: startTime ? startTime.toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: true 
+            }) : 'N/A',
+            // Format date for display in list
+            date: startTime ? startTime.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric'
+            }) : 'N/A',
+            // Keep the formatted strings for modal
+            formattedFullDate: apt.formattedFullDate || (startTime ? startTime.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }) : 'N/A'),
+            formattedTime: apt.formattedTime || (startTime ? startTime.toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }) : 'N/A'),
+            status: apt.status || 'Pending',
+            businessName: apt.businessName || 'N/A',
+            serviceName: apt.serviceName || 'N/A',
+            locationAddress: apt.locationAddress || 'N/A'
+          };
+        });
         setTodaysAppointments(transformedAppointments);
       }
     } catch (error) {
@@ -340,13 +370,21 @@ const Dashboard = () => {
               View All <ArrowRight size={16} />
             </button>
           </div>
+          
+          {/* Update the ScheduleList component usage */}
           {appointmentsLoading ? (
             <div className="loading-schedule">
               <div className="loading-spinner"></div>
               <p>Loading appointments...</p>
             </div>
           ) : todaysAppointments.length > 0 ? (
-            <ScheduleList schedules={todaysAppointments} />
+            <ScheduleList 
+              schedules={todaysAppointments}
+              onViewDetails={(appointment) => {
+                setSelectedAppointment(appointment);
+                setShowAppointmentModal(true);
+              }}
+            />
           ) : (
             <div className="no-appointments">
               <p>No appointments scheduled for today</p>
@@ -360,6 +398,53 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Appointment Details Modal */}
+      <Modal
+        title="Appointment Details"
+        visible={showAppointmentModal}
+        onOk={() => setShowAppointmentModal(false)}
+        onCancel={() => setShowAppointmentModal(false)}
+        footer={[
+          <button 
+            key="ok" 
+            className="modal-ok-btn"
+            onClick={() => setShowAppointmentModal(false)}
+          >
+            OK
+          </button>
+        ]}
+      >
+        {selectedAppointment && (
+          <div className="booking-summary">
+            <h3>{selectedAppointment.appointmentTitle || 'Appointment Details'}</h3>
+            <div className="summary-detail">
+              <strong>Business:</strong> {selectedAppointment.businessName || 'N/A'}
+            </div>
+            <div className="summary-detail">
+              <strong>Service:</strong> {selectedAppointment.serviceName || 'N/A'}
+            </div>
+            <div className="summary-detail">
+              <strong>Location:</strong> {selectedAppointment.locationAddress || 'N/A'}
+            </div>
+            <div className="summary-detail">
+              <strong>Date:</strong> {selectedAppointment.formattedFullDate || 'N/A'}
+            </div>
+            <div className="summary-detail">
+              <strong>Time:</strong> {selectedAppointment.formattedTime || 'N/A'}
+            </div>
+            <div className="summary-detail">
+              <strong>Status:</strong> 
+              <span className={`status-badge ${(selectedAppointment.status || 'pending').toLowerCase()}`}>
+                {selectedAppointment.status || 'Pending'}
+              </span>
+            </div>
+            <div className="summary-detail">
+              <strong>Reference ID:</strong> {selectedAppointment.id || 'N/A'}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
