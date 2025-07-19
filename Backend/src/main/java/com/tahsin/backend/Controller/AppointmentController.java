@@ -7,7 +7,10 @@ import com.tahsin.backend.Repository.SlotIntervalRepository;
 import com.tahsin.backend.Repository.UserRepository;
 import com.tahsin.backend.Service.*;
 import com.tahsin.backend.dto.AppointmentDTO;
+import com.tahsin.backend.dto.AppointmentResponseDTO;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -91,6 +94,40 @@ public class AppointmentController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @GetMapping("/user/{userId}")
+public ResponseEntity<Page<AppointmentResponseDTO>> getUserAppointments(
+        @PathVariable Long userId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "15") int size) {
+    
+    Page<Appointment> appointments = appointmentService.getAppointmentsByUser(userId, page, size);
+    
+    // Convert Page<Appointment> to Page<AppointmentResponseDTO>
+    Page<AppointmentResponseDTO> responseDTOs = appointments.map(appointment -> {
+        AppointmentResponseDTO dto = new AppointmentResponseDTO();
+        dto.setAppointmentId(appointment.getId());
+        dto.setStatus(appointment.getStatus().toString());
+        
+        // Safely handle nested entities that might be null
+        dto.setLocationName(appointment.getLocation() != null ? appointment.getLocation().getArea() : null);
+        dto.setBusinessName(appointment.getBusiness() != null ? appointment.getBusiness().getBusinessName() : null);
+        dto.setStartTime(appointment.getStartTime());
+        dto.setEndTime(appointment.getEndTime());
+        
+        // Add any additional fields you want to include
+        if (appointment.getService() != null) {
+            dto.setServiceName(appointment.getService().getName());
+        }
+        if (appointment.getCustomer() != null) {
+            dto.setCustomerName(appointment.getCustomer().getName());
+        }
+        
+        return dto;
+    });
+    
+    return ResponseEntity.ok(responseDTOs);
+}
 
 
 }

@@ -1,11 +1,16 @@
 package com.tahsin.backend.Controller;
 import com.tahsin.backend.dto.ReviewRequestDTO;
+import com.tahsin.backend.dto.ReviewResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.tahsin.backend.Model.Review;
@@ -23,15 +28,33 @@ public class ReviewController {
     private AppointmentService appointmentService;
     
     @PostMapping
-    public ResponseEntity<Review> createReview(@RequestBody ReviewRequestDTO reviewRequest) {
+    public ResponseEntity<String> createReview(@RequestBody ReviewRequestDTO reviewRequest) {
         // Logic to create a review based on the request
         Review newReview = new Review();
         newReview.setAppointment(appointmentService.getById(reviewRequest.getAppointmentId()));
         newReview.setRating(reviewRequest.getRating());
         newReview.setComment(reviewRequest.getComment());
         
-        Review savedReview = reviewService.save(newReview);
-        return ResponseEntity.ok(savedReview);
+        reviewService.save(newReview);
+        return ResponseEntity.ok("saved");
+    }
+
+   
+
+    @GetMapping("/{businessId}")
+    public ResponseEntity<Page<ReviewResponseDTO>> getBusinessReviews(
+            @PathVariable Long businessId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size) {
+        
+        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByBusiness(businessId, page, size);
+        return ResponseEntity.ok(reviews);
+    }
+
+    @GetMapping("/average/{businessId}")
+    public ResponseEntity<Double> getAverageRating(@PathVariable Long businessId) {
+        Double averageRating = reviewService.getAverageRatingByBusiness(businessId);
+        return ResponseEntity.ok(averageRating);
     }
 
 }

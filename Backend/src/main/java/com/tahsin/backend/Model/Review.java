@@ -44,6 +44,9 @@ public class Review {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    public Review() {
+    }
+
     public Long getId() {
         return id;
     }
