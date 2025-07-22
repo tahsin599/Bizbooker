@@ -18,4 +18,7 @@ public interface ServiceCategoryRepository extends JpaRepository<ServiceCategory
     
     @Query("SELECT sc FROM ServiceCategory sc ORDER BY sc.name")
     List<ServiceCategory> findAllOrdered();
+
+    @Query("SELECT sc FROM ServiceCategory sc WHERE LOWER(sc.name) = LOWER(:name)")
+    Optional<ServiceCategory> findByNameIgnoreCase(String name);
 }

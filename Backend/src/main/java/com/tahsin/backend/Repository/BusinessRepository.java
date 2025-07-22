@@ -51,5 +51,9 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
 
     @Query(value = "SELECT * FROM business ORDER BY RAND() LIMIT :count", nativeQuery = true)
     List<Business> findRandomBusinesses(@Param("count") int count);
+
+    @Query("SELECT b FROM Business b WHERE LOWER(b.businessName) = LOWER(:name)")
+    Business findByBusinessNameIgnoreCase(@Param("name") String name);
+   
     
 }
