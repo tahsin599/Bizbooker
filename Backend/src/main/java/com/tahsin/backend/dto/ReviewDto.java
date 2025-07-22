@@ -2,7 +2,7 @@ package com.tahsin.backend.dto;
 
 import jakarta.persistence.Lob;
 
-public class ReviewDTO {
+public class ReviewDto {
 
     private String imageName;
     private String imageType;

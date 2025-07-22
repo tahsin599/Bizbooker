@@ -6,15 +6,13 @@ import com.tahsin.backend.Repository.BusinessRepository;
 import com.tahsin.backend.Repository.SlotIntervalRepository;
 import com.tahsin.backend.Repository.UserRepository;
 import com.tahsin.backend.Service.*;
-import com.tahsin.backend.dto.AppointmentDTO;
+import com.tahsin.backend.dto.AppointmentDto;
 import com.tahsin.backend.dto.AppointmentResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -40,7 +38,7 @@ public class AppointmentController {
     
 
     @PostMapping
-    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentDTO appointmentDTO) {
+    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentDto appointmentDTO) {
         try {
             // Validate required fields
             if (appointmentDTO.getCustomerId() == null ||

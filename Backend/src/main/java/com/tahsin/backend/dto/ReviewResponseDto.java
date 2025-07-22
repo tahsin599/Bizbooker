@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Lob;
 
-public class ReviewResponseDTO {
+public class ReviewResponseDto {
     private Long id;
     private Long appointmentId;
     private Integer rating;
@@ -44,7 +44,7 @@ public class ReviewResponseDTO {
     }
 
     // Constructors, getters, and setters
-    public ReviewResponseDTO() {}
+    public ReviewResponseDto() {}
 
     public Long getId() {
         return id;

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.tahsin.backend.Model.Review;
 import com.tahsin.backend.Repository.ReviewRepository;
-import com.tahsin.backend.dto.ReviewResponseDTO;
+import com.tahsin.backend.dto.ReviewResponseDto;
 
 @Service
 public class ReviewService {
@@ -25,15 +25,15 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-    public Page<ReviewResponseDTO> getReviewsByBusiness(Long businessId, int page, int size) {
+    public Page<ReviewResponseDto> getReviewsByBusiness(Long businessId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Review> reviews = reviewRepository.findByBusinessId2(businessId, pageable);
         
         return reviews.map(this::convertToDto);
     }
 
-    private ReviewResponseDTO convertToDto(Review review) {
-        ReviewResponseDTO dto = new ReviewResponseDTO();
+    private ReviewResponseDto convertToDto(Review review) {
+        ReviewResponseDto dto = new ReviewResponseDto();
         
         // Basic review fields
         dto.setId(review.getId());

@@ -51,7 +51,7 @@ const BusinessListingPage = () => {
     useEffect(() => {
         const fetchRandomBusinesses = async () => {
             try {
-                const response = await fetch('http://localhost:8080/api/customer/businesses/random?count=6', {
+                const response = await fetch('http://localhost:8081/api/customer/businesses/random?count=6', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -71,7 +71,7 @@ const BusinessListingPage = () => {
         const fetchFilters = async () => {
             try {
                 // Fetch categories
-                const categoriesResponse = await fetch('http://localhost:8080/api/customer/businesses/categories', {
+                const categoriesResponse = await fetch('http://localhost:8081/api/customer/businesses/categories', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -103,7 +103,7 @@ const BusinessListingPage = () => {
 
         setLoading(true);
         try {
-            let url = `http://localhost:8080/api/customer/businesses?page=${page}&size=6`;
+            let url = `http://localhost:8081/api/customer/businesses?page=${page}&size=6`;
             if (filters.category) url += `&categoryId=${filters.category}`;
             if (filters.area) url += `&area=${filters.area}`;
 

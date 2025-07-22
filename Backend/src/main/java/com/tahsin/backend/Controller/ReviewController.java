@@ -1,6 +1,6 @@
 package com.tahsin.backend.Controller;
 import com.tahsin.backend.dto.ReviewRequestDTO;
-import com.tahsin.backend.dto.ReviewResponseDTO;
+import com.tahsin.backend.dto.ReviewResponseDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,12 +42,12 @@ public class ReviewController {
    
 
     @GetMapping("/{businessId}")
-    public ResponseEntity<Page<ReviewResponseDTO>> getBusinessReviews(
+    public ResponseEntity<Page<ReviewResponseDto>> getBusinessReviews(
             @PathVariable Long businessId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size) {
         
-        Page<ReviewResponseDTO> reviews = reviewService.getReviewsByBusiness(businessId, page, size);
+        Page<ReviewResponseDto> reviews = reviewService.getReviewsByBusiness(businessId, page, size);
         return ResponseEntity.ok(reviews);
     }
 

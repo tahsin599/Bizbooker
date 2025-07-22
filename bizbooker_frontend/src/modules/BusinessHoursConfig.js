@@ -17,7 +17,7 @@ const daysOfWeek = [
 const BusinessHoursConfig = () => {
   const token = localStorage.getItem('token');
   //const { businessId } = useParams();
-  businessId = 1; // Hardcoded for testing, replace with useParams() in production
+  const businessId = 1; // Hardcoded for testing, replace with useParams() in production
   const [isOpen, setIsOpen] = useState(true);
   const [config, setConfig] = useState({
     regularHours: daysOfWeek.map(day => ({

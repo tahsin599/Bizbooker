@@ -39,7 +39,7 @@ public class GeminiModelController {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiModelController.class);
 
-    @Value("${spring.ai.openai.api-key}")
+    @Value("${spring.ai.openai.api-key:}")
     private String GEMINI_API_KEY;
 
     private final RestClient restClient;
@@ -199,6 +199,9 @@ public class GeminiModelController {
     }
 
     private String callGeminiAPI(Map<String, Object> requestBody) {
+        if (GEMINI_API_KEY == null || GEMINI_API_KEY.trim().isEmpty()) {
+            throw new RuntimeException("Gemini API key is not configured");
+        }
         return restClient.post()
                 .uri(GEMINI_API_URL + "?key=" + GEMINI_API_KEY)
                 .contentType(MediaType.APPLICATION_JSON)
