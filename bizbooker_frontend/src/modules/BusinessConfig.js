@@ -26,6 +26,7 @@ const BusinessConfig = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [slotDuration, setSlotDuration] = useState(30);
+  const [slotPrice, setSlotPrice] = useState(0.0);
   const [weeklyHours, setWeeklyHours] = useState([]);
   const [selectedTemplateDay, setSelectedTemplateDay] = useState(null);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
@@ -61,6 +62,7 @@ const BusinessConfig = () => {
           maxSlotsPerInterval: response.data.maxSlotsPerInterval
         });
         setSlotDuration(response.data.slotDuration);
+        setSlotPrice(response.data.slotPrice || 0.0);
       }
     } catch (error) {
       console.log('No existing configuration found:', error);
@@ -132,6 +134,7 @@ const BusinessConfig = () => {
         locationId: businessId,
         maxSlotsPerInterval: values.maxSlotsPerInterval,
         slotDuration: slotDuration,
+        slotPrice: slotPrice,
         startTime: earliestStart,
         endTime: latestEnd
       };
@@ -276,6 +279,33 @@ const BusinessConfig = () => {
                     <Option key={duration} value={duration}>{duration}</Option>
                   ))}
                 </Select>
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item label="Slot Price ($)">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={slotPrice}
+                  onChange={(e) => setSlotPrice(parseFloat(e.target.value) || 0)}
+                  placeholder="Enter price per slot"
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #d9d9d9',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
+                <div style={{ 
+                  marginTop: '4px', 
+                  fontSize: '12px', 
+                  color: '#666',
+                  fontStyle: 'italic' 
+                }}>
+                  Current price: <strong>${slotPrice?.toFixed(2) || '0.00'}</strong> per slot
+                </div>
               </Form.Item>
             </Col>
           </Row>

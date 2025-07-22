@@ -11,6 +11,7 @@ public class AppointmentResponseDTO {
     private LocalDateTime endTime;  // Typically useful with startTime
     private String serviceName;     // Often needed
     private String customerName;    // Useful for business views
+    private Double slotPrice;       // Price of the booked slot
 
     // Constructors
     public AppointmentResponseDTO() {
@@ -88,5 +89,13 @@ public class AppointmentResponseDTO {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public Double getSlotPrice() {
+        return slotPrice;
+    }
+
+    public void setSlotPrice(Double slotPrice) {
+        this.slotPrice = slotPrice;
     }
 }

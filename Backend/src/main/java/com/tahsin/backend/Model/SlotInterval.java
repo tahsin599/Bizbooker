@@ -25,6 +25,9 @@ public class SlotInterval {
 
     @Column(nullable = false)
     private Integer usedSlots = 0;
+    
+    @Column(nullable = false)
+    private Double price = 0.0;
 
     public Long getId() {
         return id;
@@ -72,6 +75,14 @@ public class SlotInterval {
 
     public void setUsedSlots(Integer usedSlots) {
         this.usedSlots = usedSlots;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 
     // Getters and setters

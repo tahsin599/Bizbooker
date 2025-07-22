@@ -19,6 +19,7 @@ public class SlotIntervalResponseDTO {
     private int maxSlots;
     private int usedSlots;
     private int availableSlots;
+    private Double price;
     // Default constructor
     public SlotIntervalResponseDTO() {
     }
@@ -31,6 +32,7 @@ public class SlotIntervalResponseDTO {
         this.maxSlots = interval.getMaxSlots();
         this.usedSlots = interval.getUsedSlots();
         this.availableSlots = interval.getMaxSlots() - interval.getUsedSlots();
+        this.price = interval.getPrice();
     }
 
     public LocalTime getStartTime() {
@@ -71,5 +73,13 @@ public class SlotIntervalResponseDTO {
 
     public void setAvailableSlots(int availableSlots) {
         this.availableSlots = availableSlots;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 }

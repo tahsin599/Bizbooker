@@ -40,6 +40,9 @@ public class SlotConfiguration {
 
     private LocalDate lastResetDate;
     private Integer slotDuration = 30;
+    
+    @Column(nullable = false)
+    private Double slotPrice = 0.0;
     @OneToMany(mappedBy = "configuration", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SlotInterval> intervals;
 
@@ -119,6 +122,14 @@ public class SlotConfiguration {
 
     public void setSlotDuration(Integer slotDuration) {
         this.slotDuration = slotDuration;
+    }
+
+    public Double getSlotPrice() {
+        return slotPrice;
+    }
+
+    public void setSlotPrice(Double slotPrice) {
+        this.slotPrice = slotPrice;
     }
 
     // Getters, setters, constructors

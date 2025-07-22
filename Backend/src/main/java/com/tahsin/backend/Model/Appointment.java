@@ -55,6 +55,9 @@ public class Appointment {
     
     private String notes;
 
+    @Column(nullable = false)
+    private Double slotPrice = 0.0;
+
     private String cancellationReason;
 
     @Enumerated(EnumType.STRING)
@@ -145,6 +148,14 @@ public class Appointment {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public Double getSlotPrice() {
+        return slotPrice;
+    }
+
+    public void setSlotPrice(Double slotPrice) {
+        this.slotPrice = slotPrice;
     }
 
     public String getCancellationReason() {

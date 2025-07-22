@@ -300,25 +300,67 @@
   font-size: 14px;
 }
 
-.time-range {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.time-range span {
-  margin-bottom: 8px;
+/* Price Info Styling */
+.price-info {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.875rem;
   color: #6b7280;
+  font-style: italic;
 }
 
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.price-info strong {
+  color: #1e40af;
+  font-weight: 700;
 }
 
-.checkbox-group input {
-  width: auto;
+/* Dark mode price info */
+@media (prefers-color-scheme: dark) {
+  .price-info {
+    color: #9ca3af;
+  }
+  
+  .price-info strong {
+    color: #93c5fd;
+  }
+}
+
+/* Slot Price Input Styling */
+.form-group input[placeholder*="price"] {
+  border: 2px solid #3b82f6;
+  background-color: #eff6ff;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.form-group input[placeholder*="price"]:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: #ffffff;
+}
+
+.form-group label:has(+ input[placeholder*="price"]) {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+/* Dark mode slot price styling */
+@media (prefers-color-scheme: dark) {
+  .form-group input[placeholder*="price"] {
+    background-color: #1e3a8a;
+    border-color: #3b82f6;
+    color: #dbeafe;
+  }
+  
+  .form-group input[placeholder*="price"]:focus {
+    background-color: #1e40af;
+    border-color: #60a5fa;
+  }
+  
+  .form-group label:has(+ input[placeholder*="price"]) {
+    color: #93c5fd;
+  }
 }
 
 /* Slot Config Section */

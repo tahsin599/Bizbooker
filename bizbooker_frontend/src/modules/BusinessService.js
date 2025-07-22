@@ -148,6 +148,9 @@ const BusinessService = () => {
 
           const availableSlots = interval ? (interval.maxSlots - interval.usedSlots) : 0;
           const status = availableSlots > 0 ? 'vacant' : 'booked';
+          
+          // Get price from interval or fallback to slot config price
+          const slotPrice = interval?.price || config.slotPrice || 0;
 
           slotIntervals.push({
             start: currentTime.toTimeString().substring(0, 5),
@@ -155,6 +158,7 @@ const BusinessService = () => {
             status,
             customer: null,
             availableSlots,
+            price: slotPrice,
             intervalData: interval
           });
 
@@ -279,6 +283,7 @@ const BusinessService = () => {
           startTime: `${selectedDate}T${selectedTime}:00`,
           endTime: `${selectedDate}T${selectedSlot.end}:00`,
           userSelectedCount: selectedSlot.selectedCount || 1,
+          slotPrice: selectedSlot.price || 0
         };
 
         try {
@@ -295,7 +300,9 @@ const BusinessService = () => {
             date: selectedDate,
             time: `${selectedTime} - ${selectedSlot.end}`,
             referenceId: response.data.appointmentId,
-            slotsBooked: selectedSlot.selectedCount || 1
+            slotsBooked: selectedSlot.selectedCount || 1,
+            totalPrice: (selectedSlot.price || 0) * (selectedSlot.selectedCount || 1),
+            pricePerSlot: selectedSlot.price || 0
           });
           setBookingSuccess(true);
           
@@ -402,6 +409,12 @@ const BusinessService = () => {
             </div>
             <div className="summary-detail">
               <strong>Slots Booked:</strong> {bookingData.slotsBooked}
+            </div>
+            <div className="summary-detail">
+              <strong>Price per Slot:</strong> ${bookingData.pricePerSlot?.toFixed(2) || '0.00'}
+            </div>
+            <div className="summary-detail total-price">
+              <strong>Total Amount:</strong> ${bookingData.totalPrice?.toFixed(2) || '0.00'}
             </div>
             <div className="summary-detail">
               <strong>Reference ID:</strong> {bookingData.referenceId}
@@ -577,7 +590,10 @@ const BusinessService = () => {
                                 className={`time-slot-detailed ${timeSlot.status} ${isFullyBooked ? 'fully-booked' : ''} ${selectedTime === timeSlot.start ? 'selected' : ''}`}
                                 onClick={() => isAvailable && handleTimeClick(timeSlot)}
                               >
-                                <div className="time-slot-time">{timeSlot.start} - {timeSlot.end}</div>
+                                <div className="time-slot-header">
+                                  <div className="time-slot-time">{timeSlot.start} - {timeSlot.end}</div>
+                                  <div className="time-slot-price">${(timeSlot.price || 0).toFixed(2)}</div>
+                                </div>
                                 <div className="time-slot-status">
                                   <span className={`status-badge ${isAvailable ? 'vacant' : 'booked'}`}>
                                     {isAvailable ? (
@@ -659,6 +675,13 @@ const BusinessService = () => {
                         <p><strong>Location:</strong> {selectedLocation.address}, {selectedLocation.city}</p>
                         <p><strong>Slots:</strong> {
                           availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.selectedCount || 1
+                        }</p>
+                        <p><strong>Price per Slot:</strong> ${
+                          (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0).toFixed(2)
+                        }</p>
+                        <p className="total-price"><strong>Total:</strong> ${
+                          ((availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0) * 
+                           (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.selectedCount || 1)).toFixed(2)
                         }</p>
                       </div>
                       <button className="book-appointment-btn" onClick={handleBookAppointment}>

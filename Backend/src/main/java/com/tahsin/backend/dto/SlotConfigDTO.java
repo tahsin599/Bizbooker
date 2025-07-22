@@ -8,6 +8,7 @@ public class SlotConfigDTO {
     private LocalTime endTime;
     private Integer slotDuration;
     private Integer maxSlotsPerInterval;
+    private Double slotPrice;
     
 
     // Getters and Setters
@@ -40,5 +41,13 @@ public class SlotConfigDTO {
     }
     public void setMaxSlotsPerInterval(Integer maxSlotsPerInterval) {
         this.maxSlotsPerInterval = maxSlotsPerInterval;
+    }
+    
+    public Double getSlotPrice() {
+        return slotPrice;
+    }
+    
+    public void setSlotPrice(Double slotPrice) {
+        this.slotPrice = slotPrice;
     }
 }

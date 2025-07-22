@@ -337,8 +337,8 @@ const BusinessDetailPage = () => {
               <div className="section-header">
                 <h2>Business Hours</h2>
                 {businessHours && businessHours.length > 0 && (
-                  <button className="edit-button" onClick={() => setShowEditHours(true)}>
-                    <Edit size={16} /> Edit Hours
+                  <button className="edit-button" onClick={handleHoursClick}>
+                    <Edit size={16} /> Edit Hours & Pricing
                   </button>
                 )}
               </div>
@@ -362,7 +362,7 @@ const BusinessDetailPage = () => {
                 <div className="empty-state">
                   <p>No business hours configured yet.</p>
                   <button className="add-button" onClick={handleHoursClick}>
-                    <Plus size={16} /> Configure Hours
+                    <Plus size={16} /> Configure Hours & Pricing
                   </button>
                 </div>
               )}

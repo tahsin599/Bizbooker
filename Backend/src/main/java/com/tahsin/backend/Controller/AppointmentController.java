@@ -57,6 +57,16 @@ public class AppointmentController {
             BusinessLocation location = locationService.findById(appointmentDTO.getLocationId())
                 .orElseThrow(() -> new RuntimeException("Location not found"));
 
+            // Get slot price from the slot interval
+            Double slotPrice = 0.0;
+            if (appointmentDTO.getConfigId() != null) {
+                slotPrice = repo.findByConfigurationIdAndStartTime(
+                        appointmentDTO.getConfigId(),
+                        appointmentDTO.getStartTime().toLocalTime())
+                    .map(interval -> interval.getPrice())
+                    .orElse(0.0);
+            }
+
             // Create new appointment
             Appointment appointment = new Appointment();
             appointment.setCustomer(customer);
@@ -65,20 +75,23 @@ public class AppointmentController {
             appointment.setStartTime(appointmentDTO.getStartTime());
             appointment.setEndTime(appointmentDTO.getEndTime());
             appointment.setStatus(AppointmentStatus.PENDING);
+            appointment.setSlotPrice(slotPrice); // Store the slot price in the appointment
             
+            // Update slot usage and validate booking
             repo.findByConfigurationIdAndStartTime(
                     appointmentDTO.getConfigId(),
                     appointmentDTO.getStartTime().toLocalTime())
                 .ifPresent(interval -> {
-                    
+                    // Check if slot is available
+                    if (interval.getUsedSlots() + appointmentDTO.getUserSelectedCount() > interval.getMaxSlots()) {
+                        throw new RuntimeException("Slot is fully booked");
+                    }
                     interval.setUsedSlots(interval.getUsedSlots() + appointmentDTO.getUserSelectedCount());
                     repo.save(interval);
                 });
 
-            
             // Set optional service if provided
            
-
             // Set optional notes if provided
             if (appointmentDTO.getNotes() != null) {
                 appointment.setNotes(appointmentDTO.getNotes());
@@ -120,6 +133,9 @@ public ResponseEntity<Page<AppointmentResponseDTO>> getUserAppointments(
         if (appointment.getCustomer() != null) {
             dto.setCustomerName(appointment.getCustomer().getName());
         }
+        
+        // Set the slot price from the appointment
+        dto.setSlotPrice(appointment.getSlotPrice());
         
         return dto;
     });

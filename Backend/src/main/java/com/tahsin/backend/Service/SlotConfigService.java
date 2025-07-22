@@ -46,6 +46,7 @@ public class SlotConfigService {
             config.setEndTime(configDTO.getEndTime());
             config.setSlotDuration(configDTO.getSlotDuration());
             config.setMaxSlotsPerInterval(configDTO.getMaxSlotsPerInterval());
+            config.setSlotPrice(configDTO.getSlotPrice() != null ? configDTO.getSlotPrice() : 0.0);
 
             SlotConfiguration savedConfig = slotConfigRepository.save(config);
             savedConfig1 = savedConfig1 == null ? savedConfig : savedConfig1;

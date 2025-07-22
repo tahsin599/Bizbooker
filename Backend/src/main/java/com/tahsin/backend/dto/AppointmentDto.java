@@ -12,6 +12,7 @@ public class AppointmentDto {
     private String notes;
     private Long configId;
     private int userSelectedCount;
+    private Double slotPrice;
 
     public int getUserSelectedCount() {
         return userSelectedCount;
@@ -78,5 +79,13 @@ public class AppointmentDto {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public Double getSlotPrice() {
+        return slotPrice;
+    }
+
+    public void setSlotPrice(Double slotPrice) {
+        this.slotPrice = slotPrice;
     }
 }

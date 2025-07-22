@@ -51,6 +51,7 @@ public class SlotConfigController {
         dto.setSlotDuration(config.getSlotDuration());
         dto.setMaxSlotsPerInterval(config.getMaxSlotsPerInterval());
         dto.setUsedSlots(config.getUsedSlots());
+        dto.setSlotPrice(config.getSlotPrice());
         return dto;
     }
 
@@ -64,6 +65,7 @@ public class SlotConfigController {
                 dto.setMaxSlots(interval.getMaxSlots());
                 dto.setUsedSlots(interval.getUsedSlots());
                 dto.setAvailableSlots(interval.getMaxSlots() - interval.getUsedSlots());
+                dto.setPrice(interval.getPrice());
                 return dto;
             })
             .collect(Collectors.toList());

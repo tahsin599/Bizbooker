@@ -35,6 +35,7 @@ public class SlotIntervalService {
             interval.setEndTime(current.plusMinutes(config.getSlotDuration()));
             interval.setMaxSlots(config.getMaxSlotsPerInterval());
             interval.setUsedSlots(0);
+            interval.setPrice(config.getSlotPrice() != null ? config.getSlotPrice() : 0.0);
             
             slotIntervalRepository.save(interval);
             

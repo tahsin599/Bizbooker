@@ -9,6 +9,7 @@ public class SlotConfigResponseDTO {
     private Integer slotDuration;
     private Integer maxSlotsPerInterval;
     private Integer usedSlots;
+    private Double slotPrice;
     private List<SlotIntervalResponseDTO> intervals;
 
     public List<SlotIntervalResponseDTO> getIntervals() {
@@ -58,5 +59,13 @@ public class SlotConfigResponseDTO {
 
     public void setUsedSlots(Integer usedSlots) {
         this.usedSlots = usedSlots;
+    }
+
+    public Double getSlotPrice() {
+        return slotPrice;
+    }
+
+    public void setSlotPrice(Double slotPrice) {
+        this.slotPrice = slotPrice;
     }
 }
