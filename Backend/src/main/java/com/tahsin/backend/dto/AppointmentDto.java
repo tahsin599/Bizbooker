@@ -6,13 +6,21 @@ public class AppointmentDto {
     private Long customerId;
     private Long businessId;
     private Long locationId;
-    
+    private String paymentReference;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String notes;
     private Long configId;
     private int userSelectedCount;
     private Double slotPrice;
+
+    public String getPaymentReference() {
+        return paymentReference;
+    }
+
+    public void setPaymentReference(String paymentReference) {
+        this.paymentReference = paymentReference;
+    }
 
     public int getUserSelectedCount() {
         return userSelectedCount;

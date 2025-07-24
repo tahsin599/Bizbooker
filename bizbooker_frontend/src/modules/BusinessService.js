@@ -10,6 +10,7 @@ import './BusinessService.css';
 import { Modal } from 'antd';
 import message from 'antd/lib/message';
 import axios from 'axios';
+// Stripe Checkout integration
 
 const BusinessService = () => {
   const { businessId } = useParams();
@@ -29,7 +30,9 @@ const BusinessService = () => {
   const [expandedLocation, setExpandedLocation] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingData, setBookingData] = useState(null);
+  const [pendingBooking, setPendingBooking] = useState(null);
   const token = localStorage.getItem('token');
+  // Remove setShowPayment, not needed for Stripe Checkout
 
   // Fetch business data
   useEffect(() => {
@@ -273,48 +276,54 @@ const BusinessService = () => {
       const selectedSlot = availableSlots[selectedDate]?.find(
         slot => slot.start === selectedTime
       );
-
       if (selectedSlot && selectedSlot.status === 'vacant' && selectedSlot.availableSlots > 0) {
-        const appointmentData = {
-          configId: selectedSlot.intervalData.configId,
-          customerId: localStorage.getItem('userId'),
-          businessId: businessId,
-          locationId: selectedLocation.locationId,
-          startTime: `${selectedDate}T${selectedTime}:00`,
-          endTime: `${selectedDate}T${selectedSlot.end}:00`,
-          userSelectedCount: selectedSlot.selectedCount || 1,
-          slotPrice: selectedSlot.price || 0
-        };
-
+        // Prepare appointment data and store in localStorage
         try {
-          const response = await axios.post(`${API_BASE_URL}/api/appointments`, appointmentData, {
+          const res = await fetch(`${API_BASE_URL}/api/payments/create-checkout-session`, {
+            method: 'POST',
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              price: selectedSlot.price || 0,
+              quantity: selectedSlot.selectedCount || 1,
+              businessId,
+              locationId: selectedLocation.locationId,
+              startTime: `${selectedDate}T${selectedTime}:00`,
+              endTime: `${selectedDate}T${selectedSlot.end}:00`,
+              configId: selectedSlot.intervalData.configId,
+              customerId: localStorage.getItem('userId')
+            })
           });
-
-          // Show success modal with booking details
-          setBookingData({
-            businessName: business.businessName,
-            location: `${selectedLocation.address}, ${selectedLocation.city}`,
-            date: selectedDate,
-            time: `${selectedTime} - ${selectedSlot.end}`,
-            referenceId: response.data.appointmentId,
-            slotsBooked: selectedSlot.selectedCount || 1,
-            totalPrice: (selectedSlot.price || 0) * (selectedSlot.selectedCount || 1),
-            pricePerSlot: selectedSlot.price || 0
-          });
-          setBookingSuccess(true);
-          
-          // Refresh available slots
-          fetchSlotConfig(selectedLocation.locationId);
-        } catch (error) {
-          console.error('Error booking appointment:', error);
-          message.error('Failed to book appointment');
+          const data = await res.json();
+          if (data.url && data.sessionId) {
+            // Store appointment data with Stripe sessionId as paymentReference
+            const appointmentData = {
+              customerId: localStorage.getItem('userId'),
+              businessId,
+              locationId: selectedLocation.locationId,
+              startTime: `${selectedDate}T${selectedTime}:00`,
+              endTime: `${selectedDate}T${selectedSlot.end}:00`,
+              configId: selectedSlot.intervalData.configId,
+              userSelectedCount: selectedSlot.selectedCount || 1,
+              slotPrice: selectedSlot.price || 0,
+              notes: "",
+              paymentReference: data.sessionId
+            };
+            localStorage.setItem("pendingAppointment", JSON.stringify(appointmentData));
+            window.location.href = data.url; // Redirect to Stripe Checkout
+          } else {
+            message.error('Failed to initiate payment.');
+          }
+        } catch (err) {
+          message.error('Payment error.');
         }
       }
     }
   };
+
+  // Remove handlePaymentSuccess, not needed for Stripe Checkout
 
   const navigateMonth = (direction) => {
     if (direction === 'prev') {
@@ -689,6 +698,9 @@ const BusinessService = () => {
                       </button>
                     </div>
                   )}
+
+                  {/* Stripe Payment Modal */}
+                  {/* Stripe Checkout handles payment UI, no modal needed here */}
                 </div>
               )}
             </div>

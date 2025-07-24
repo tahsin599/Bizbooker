@@ -36,7 +36,7 @@ public class Payment {
     @Column(nullable = false, length = 50)
     private String paymentMethod;
 
-    @Column(length = 100)
+    @Column(length = 100, unique = true)
     private String transactionId;
 
     @Enumerated(EnumType.STRING)
@@ -46,7 +46,7 @@ public class Payment {
     @Column(length = 512)
     private String receiptUrl;
 
-    @Column(length = 100)
+    @Column(length = 100, unique = true)
     private String stripePaymentIntentId;
 
     @CreationTimestamp

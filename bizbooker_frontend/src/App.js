@@ -21,6 +21,7 @@ import CategoryBusinessListingPage from './modules/CategoryBusinessListingPage';
 import NoBusinessesFound from './modules/NoBusinessesFound';
 import BusinessConfig from './modules/BusinessConfig';
 import BookingsPage from './modules/BookingsPage'; // Import the BookingsPage component
+import PaymentSuccess from './modules/PaymentSuccess';
 function App() {
   return (
     <BrowserRouter>
@@ -45,6 +46,7 @@ function App() {
           <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
           <Route path="/business/config/:businessId" element={<><BusinessConfig /></>} /> 
           <Route path="/bookings" element={<><BookingsPage/></>}/>
+          <Route path="/payment-success" element={<PaymentSuccess />} />
        
 
           {/* Add more routes as needed */}

@@ -1,5 +1,4 @@
 package com.tahsin.backend.Service;
-
 import com.tahsin.backend.Model.Appointment;
 import com.tahsin.backend.Repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;

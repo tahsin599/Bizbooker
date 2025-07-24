@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, DollarSign, Calendar } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import './SlotBooking.css';
+import { Elements } from '@stripe/react-stripe-js';
+import { stripePromise } from '../config/stripe';
+import PaymentForm from '../components/PaymentForm';
 
 const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
+  const navigate = useNavigate();
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPayment, setShowPayment] = useState(false);
+  const [slotPrice, setSlotPrice] = useState(0);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -15,6 +22,12 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
       fetchAvailableSlots();
     }
   }, [businessId, locationId, selectedDate]);
+
+  useEffect(() => {
+    if (showPayment) {
+      console.log('Stripe payment modal should be visible now.');
+    }
+  }, [showPayment]);
 
   const fetchAvailableSlots = async () => {
     try {
@@ -46,22 +59,29 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
     }
   };
 
-  const handleBookAppointment = async () => {
-    if (!selectedSlot) return;
+  const handleBookNow = () => {
+    if (selectedSlot) {
+      setSlotPrice(selectedSlot.price || 0);
+      setShowPayment(true);
+    }
+  };
 
+  const handlePaymentSuccess = async () => {
+    setShowPayment(false);
+    // Create appointment only after payment is successful
+    if (!selectedSlot) return;
     try {
       const appointmentData = {
-        customerId: 1, // TODO: Get from auth context
+        customerId: localStorage.getItem('userId'), // Get from auth context/localStorage
         businessId: businessId,
         locationId: locationId,
         startTime: `${selectedDate}T${selectedSlot.time}`,
-        endTime: `${selectedDate}T${selectedSlot.endTime || selectedSlot.time}`, // Use endTime if available
+        endTime: `${selectedDate}T${selectedSlot.endTime || selectedSlot.time}`,
         configId: selectedSlot.configId,
         userSelectedCount: 1,
         slotPrice: selectedSlot.price,
         notes: ""
       };
-
       const response = await fetch(`${API_BASE_URL}/api/appointments`, {
         method: 'POST',
         headers: {
@@ -70,12 +90,9 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
         },
         body: JSON.stringify(appointmentData)
       });
-
       if (response.ok) {
-        alert('Appointment booked successfully!');
-        // Refresh available slots
-        fetchAvailableSlots();
-        setSelectedSlot(null);
+        console.log('Appointment registered successfully in DB for user:', appointmentData.customerId);
+        navigate('/payment-success');
       } else {
         const error = await response.text();
         alert('Failed to book appointment: ' + error);
@@ -85,6 +102,8 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
       alert('Failed to book appointment. Please try again.');
     }
   };
+
+  // Remove handleBookAppointment, now handled in handlePaymentSuccess
 
   const formatTime = (timeString) => {
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString([], {
@@ -168,13 +187,25 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
                 )}
               </div>
               <div className="booking-actions">
-                <button className="book-button" onClick={handleBookAppointment}>
+                <button className="book-button" onClick={handleBookNow}>
                   Book Appointment
                   {selectedSlot.price && ` - $${selectedSlot.price}`}
                 </button>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {showPayment && (
+        <div className="payment-modal" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 8, minWidth: 350, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <h2 style={{marginBottom: 24}}>Pay with Card</h2>
+            <Elements stripe={stripePromise}>
+              <PaymentForm amount={slotPrice} onSuccess={handlePaymentSuccess} />
+            </Elements>
+            <button onClick={() => setShowPayment(false)} style={{ marginTop: 16, background: '#eee', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
+          </div>
         </div>
       )}
     </div>

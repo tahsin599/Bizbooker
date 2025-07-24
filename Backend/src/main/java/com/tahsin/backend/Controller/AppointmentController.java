@@ -37,6 +37,9 @@ public class AppointmentController {
 
     
 
+    @Autowired
+    private com.tahsin.backend.Repository.PaymentRepository paymentRepository;
+
     @PostMapping
     public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentDto appointmentDTO) {
         try {
@@ -45,8 +48,19 @@ public class AppointmentController {
                 appointmentDTO.getBusinessId() == null ||
                 appointmentDTO.getLocationId() == null ||
                 appointmentDTO.getStartTime() == null ||
-                appointmentDTO.getEndTime() == null) {
+                appointmentDTO.getEndTime() == null ||
+                appointmentDTO.getPaymentReference() == null) {
                 return ResponseEntity.badRequest().build();
+            }
+
+
+
+            // Check for duplicate payment using Payment table
+            com.tahsin.backend.Model.Payment payment = paymentRepository.findByTransactionId(appointmentDTO.getPaymentReference())
+                .orElse(paymentRepository.findByStripePaymentIntentId(appointmentDTO.getPaymentReference()).orElse(null));
+            if (payment != null && payment.getAppointment() != null) {
+                System.out.println("[APPOINTMENT] Duplicate paymentReference, not inserting: " + payment.getAppointment());
+                return ResponseEntity.ok(payment.getAppointment());
             }
 
             // Fetch related entities
@@ -76,8 +90,7 @@ public class AppointmentController {
             appointment.setEndTime(appointmentDTO.getEndTime());
             appointment.setStatus(AppointmentStatus.PENDING);
             appointment.setSlotPrice(slotPrice); // Store the slot price in the appointment
-            
-            // Update slot usage and validate booking
+
             repo.findByConfigurationIdAndStartTime(
                     appointmentDTO.getConfigId(),
                     appointmentDTO.getStartTime().toLocalTime())
@@ -99,6 +112,24 @@ public class AppointmentController {
 
             // Save the appointment
             Appointment savedAppointment = appointmentService.save(appointment);
+
+            // Create and link payment record if not exists
+            if (payment == null) {
+                payment = new com.tahsin.backend.Model.Payment();
+                payment.setAppointment(savedAppointment);
+                payment.setAmountPaid(java.math.BigDecimal.valueOf(slotPrice));
+                payment.setAmount(java.math.BigDecimal.valueOf(slotPrice));
+                payment.setPaymentMethod("stripe");
+                payment.setStatus(com.tahsin.backend.Model.PaymentStatus.COMPLETED);
+                payment.setTransactionId(appointmentDTO.getPaymentReference());
+                payment.setStripePaymentIntentId(appointmentDTO.getPaymentReference());
+                paymentRepository.save(payment);
+            } else if (payment.getAppointment() == null) {
+                payment.setAppointment(savedAppointment);
+                paymentRepository.save(payment);
+            }
+
+            System.out.println("[APPOINTMENT] Registered: " + savedAppointment);
 
             return ResponseEntity.ok(savedAppointment);
         } catch (Exception e) {

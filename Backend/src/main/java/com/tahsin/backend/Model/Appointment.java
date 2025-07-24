@@ -39,7 +39,7 @@ public class Appointment {
     private BusinessLocation location;
 
     @ManyToOne
-    @JoinColumn(name = "service_id")
+    @JoinColumn(name = "service_id", nullable = true)
     private Service service;
 
     @Column(nullable = false)

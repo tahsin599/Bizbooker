@@ -18,6 +18,8 @@ import com.tahsin.backend.Model.Payment;
 @Component
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByAppointment(Appointment appointment);
+    Optional<Payment> findByTransactionId(String transactionId);
+    Optional<Payment> findByStripePaymentIntentId(String stripePaymentIntentId);
     
     @Query("SELECT p FROM Payment p WHERE p.appointment.customer.id = :userId ORDER BY p.createdAt DESC")
     List<Payment> findUserPaymentHistory(@Param("userId") Long userId);
