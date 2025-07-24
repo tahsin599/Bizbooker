@@ -10,6 +10,7 @@ import './BusinessService.css';
 import { Modal } from 'antd';
 import message from 'antd/lib/message';
 import axios from 'axios';
+import BusinessReviewsTab from './BusinessReviewsTab';
 
 const BusinessService = () => {
   const { businessId } = useParams();
@@ -298,7 +299,7 @@ const BusinessService = () => {
             slotsBooked: selectedSlot.selectedCount || 1
           });
           setBookingSuccess(true);
-          
+
           // Refresh available slots
           fetchSlotConfig(selectedLocation.locationId);
         } catch (error) {
@@ -372,8 +373,8 @@ const BusinessService = () => {
         }}
         onCancel={() => setBookingSuccess(false)}
         footer={[
-          <button 
-            key="ok" 
+          <button
+            key="ok"
             className="modal-ok-btn"
             onClick={() => {
               setBookingSuccess(false);
@@ -444,6 +445,12 @@ const BusinessService = () => {
         >
           Locations
         </button>
+        <button
+          className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reviews')}
+        >
+          Reviews
+        </button>
       </div>
 
       {/* Main Content */}
@@ -500,7 +507,9 @@ const BusinessService = () => {
                             Select This Location
                           </button>
                         </div>
-                      )}
+                      )
+                     
+                      }
                     </div>
                   ))}
                 </div>
@@ -570,7 +579,7 @@ const BusinessService = () => {
                           availableSlots[selectedDate].map((timeSlot, index) => {
                             const isAvailable = timeSlot.status === 'vacant' && timeSlot.availableSlots > 0;
                             const isFullyBooked = timeSlot.availableSlots <= 0;
-                            
+
                             return (
                               <div
                                 key={index}
@@ -614,7 +623,7 @@ const BusinessService = () => {
                                             Math.max(1, parseInt(e.target.value) || 1),
                                             timeSlot.availableSlots
                                           );
-                                        
+
                                           // Update the selected count in availableSlots
                                           setAvailableSlots(prev => ({
                                             ...prev,
@@ -670,7 +679,7 @@ const BusinessService = () => {
               )}
             </div>
           </div>
-        ) : (
+        ) :activeTab === 'locations' ? (
           /* Locations Tab */
           <div className="locations-section">
             <h3>Our Locations</h3>
@@ -711,10 +720,16 @@ const BusinessService = () => {
                     <HoursIcon size={16} /> View Schedule
                   </button>
                 </div>
-              ))}
+              )
+             )}
             </div>
           </div>
-        )}
+        ): (
+    /* Reviews Tab */
+    <div className="reviews-section">
+      <BusinessReviewsTab businessId={businessId} />
+    </div>
+  )}
       </div>
     </div>
   );

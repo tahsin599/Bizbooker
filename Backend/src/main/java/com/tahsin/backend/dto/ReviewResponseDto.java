@@ -18,7 +18,44 @@ public class ReviewResponseDTO {
     private String imageType;
     @Lob 
     private byte[] imageData;
+    private String businessName;
+    private String businessImageName;
+    private String businessImageType;
+    @Lob 
+    private byte[] businessImageData;
     
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
+    }
+
+    public String getBusinessImageName() {
+        return businessImageName;
+    }
+
+    public void setBusinessImageName(String businessImageName) {
+        this.businessImageName = businessImageName;
+    }
+
+    public String getBusinessImageType() {
+        return businessImageType;
+    }
+
+    public void setBusinessImageType(String businessImageType) {
+        this.businessImageType = businessImageType;
+    }
+
+    public byte[] getBusinessImageData() {
+        return businessImageData;
+    }
+
+    public void setBusinessImageData(byte[] businessImageData) {
+        this.businessImageData = businessImageData;
+    }
+
     public String getImageName() {
         return imageName;
     }

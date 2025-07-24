@@ -34,6 +34,8 @@ public class AppointmentController {
 
     @Autowired
     private SlotIntervalRepository repo;
+    @Autowired
+    private ReviewService reviewService;
 
     
 
@@ -106,6 +108,12 @@ public ResponseEntity<Page<AppointmentResponseDTO>> getUserAppointments(
     // Convert Page<Appointment> to Page<AppointmentResponseDTO>
     Page<AppointmentResponseDTO> responseDTOs = appointments.map(appointment -> {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
+        Review existingReview = reviewService.findByAppointmentId(appointment.getId());
+        if(existingReview != null) {
+            dto.setReviewGiven(true);
+        } else {
+            dto.setReviewGiven(false);
+        }
         dto.setAppointmentId(appointment.getId());
         dto.setStatus(appointment.getStatus().toString());
         
@@ -128,6 +136,10 @@ public ResponseEntity<Page<AppointmentResponseDTO>> getUserAppointments(
     
     return ResponseEntity.ok(responseDTOs);
 }
+
+
+
+
 
 
 }

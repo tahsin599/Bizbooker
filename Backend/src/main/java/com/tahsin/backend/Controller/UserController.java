@@ -1,10 +1,14 @@
 package com.tahsin.backend.Controller;
 
+import com.tahsin.backend.Model.Appointment;
+import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.Notification;
 import com.tahsin.backend.Model.User;
+import com.tahsin.backend.Repository.UserRepository;
 import com.tahsin.backend.Service.NotificationService;
 import com.tahsin.backend.Service.UserService;
 import com.tahsin.backend.dto.NotificationDto;
+import com.tahsin.backend.dto.ReviewResponseDTO;
 import com.tahsin.backend.dto.UserProfileDTO;
 
 import java.util.ArrayList;
@@ -22,21 +26,28 @@ public class UserController {
     private UserService userService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<UserProfileResponse> getUserProfile(@RequestParam Long id) {
-        
-        
+
         UserProfileDTO userProfile = userService.getUserById(id);
         List<Notification> notifications = notificationService.getNotifications(id);
-        List<NotificationDto> notificationDtos=new ArrayList<>();
+        List<NotificationDto> notificationDtos = new ArrayList<>();
         for (Notification notification : notifications) {
-            notificationDtos.add(new NotificationDto(notification.getId(), notification.getCreatedAt(), notification.getMessage(), notification.getIsRead(),notification.getRelatedEntityType(), notification.getNotificationType()));
-            
+            notificationDtos.add(new NotificationDto(notification.getId(), notification.getCreatedAt(),
+                    notification.getMessage(), notification.getIsRead(), notification.getRelatedEntityType(),
+                    notification.getNotificationType()));
+
         }
 
         return ResponseEntity.ok(new UserProfileResponse(userProfile, notificationDtos));
     }
+
+    
+
+    
 }
 
 class UserProfileResponse {

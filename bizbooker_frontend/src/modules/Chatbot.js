@@ -343,7 +343,7 @@ const Chatbot = () => {
                     <div className="chatbot-ai-message-text typing">{typingResponse}</div>
                     <div className="chatbot-typing-indicator">
                       <Loader2 size={16} className="chatbot-spin-animation" />
-                      <span>AI is typing...</span>
+                      <span>Bizzy is typing...</span>
                     </div>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ const Chatbot = () => {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message here..."
+                placeholder="Message Bizzy..."
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                 disabled={isLoading}
               />
@@ -373,7 +373,7 @@ const Chatbot = () => {
           <div className="chatbot-welcome-screen">
             <div className="chatbot-welcome-content">
               <Bot size={48} className="chatbot-welcome-icon" />
-              <h2>Welcome to BizBooker AI Assistant</h2>
+              <h2>Welcome to Bizzy- Bizzboker AI Assistant</h2>
               <p>Start a new chat to begin your conversation with our AI assistant.</p>
               <button 
                 className="chatbot-new-conversation-btn"

@@ -202,7 +202,7 @@ const Navbar = () => {
           {isAuthenticated ? (
             <>
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
-              <Link to="/bookings" className="nav-link">Bookings</Link>
+              <Link to="/show-appointments" className="nav-link">Bookings</Link>
               <Link to="/business/customer" className="nav-link">Services</Link>
               <Link to="/calendar" className="nav-link">Calendar</Link>
               <Link to="/reports" className="nav-link">Reports</Link>

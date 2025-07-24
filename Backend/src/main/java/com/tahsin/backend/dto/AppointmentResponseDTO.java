@@ -10,7 +10,16 @@ public class AppointmentResponseDTO {
     private LocalDateTime startTime;
     private LocalDateTime endTime;  // Typically useful with startTime
     private String serviceName;     // Often needed
-    private String customerName;    // Useful for business views
+    private String customerName; 
+    private boolean isReviewGiven;   // Useful for business views
+
+    public boolean isReviewGiven() {
+        return isReviewGiven;
+    }
+
+    public void setReviewGiven(boolean isReviewGiven) {
+        this.isReviewGiven = isReviewGiven;
+    }
 
     // Constructors
     public AppointmentResponseDTO() {

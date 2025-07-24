@@ -7,8 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.tahsin.backend.Model.Appointment;
 import com.tahsin.backend.Model.Review;
+import com.tahsin.backend.Model.User;
 import com.tahsin.backend.Repository.ReviewRepository;
+import com.tahsin.backend.dto.ReviewCustomerDTO;
 import com.tahsin.backend.dto.ReviewResponseDTO;
 
 @Service
@@ -53,9 +56,13 @@ public class ReviewService {
                 dto.setImageName(review.getAppointment().getCustomer().getImageName());
                 dto.setImageType(review.getAppointment().getCustomer().getImageType()); 
                 dto.setImageData(review.getAppointment().getCustomer().getImageData());
+
                 // Add more customer fields if needed
             }
-            
+            dto.setBusinessName(review.getAppointment().getBusiness().getBusinessName());
+            dto.setBusinessImageName(review.getAppointment().getBusiness().getImageName());
+            dto.setBusinessImageType(review.getAppointment().getBusiness().getImageType());
+            dto.setBusinessImageData(review.getAppointment().getBusiness().getImageData());
             // Service info
             if (review.getAppointment().getService() != null) {
                 dto.setServiceName(review.getAppointment().getService().getName());
@@ -76,5 +83,41 @@ public class ReviewService {
 
     public Long getReviewCountByBusiness(Long businessId) {
         return reviewRepository.countByBusinessId(businessId);
+    }
+
+    public Review findByAppointmentId(Long appointmentId) {
+        // TODO Auto-generated method stub
+        return reviewRepository.findByAppointmentId(appointmentId);
+    }
+
+    public Page<ReviewCustomerDTO> getReviewsByBusinessCustomer(Long businessId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Review> reviews = reviewRepository.findUnrepliedReviewsByBusinessId(businessId, pageable);
+        return reviews.map(this::convertToReviewCustomerDTO);
+    }
+
+    private ReviewCustomerDTO convertToReviewCustomerDTO(Review review) {
+        ReviewCustomerDTO dto = new ReviewCustomerDTO();
+        Appointment appointment = review.getAppointment();
+        
+        dto.setId(review.getId());
+        dto.setRating(review.getRating());
+        dto.setComment(review.getComment());
+        
+        // Customer info
+        User customer = appointment.getCustomer();
+        dto.setCustomerName(customer.getName());
+        
+        // Business info
+        dto.setBusinessName(appointment.getBusiness().getBusinessName());
+        
+        // Customer image if available
+        
+            dto.setImageName(customer.getImageName());
+            dto.setImageType(customer.getImageType());
+            dto.setImageData(customer.getImageData());
+        
+        
+        return dto;
     }
 }

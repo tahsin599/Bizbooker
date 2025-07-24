@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, PlusCircle, ArrowRight, Clock, MapPin, Phone, Check, X } from 'lucide-react';
+import { Briefcase, PlusCircle, ArrowRight, Clock, MapPin, Phone, Check, X, Star } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import './UserBusinesses.css';
 import Navbar from './Navbar';
+import BusinessReviewsPage from './BusinessReviewsPage';
 
 const UserBusinesses = () => {
   const [businesses, setBusinesses] = useState([]);
@@ -18,7 +19,6 @@ const UserBusinesses = () => {
     if (!imageData) return null;
     
     try {
-      // Handle both string (base64) and ArrayBuffer formats
       const base64String = typeof imageData === 'string' 
         ? imageData 
         : arrayBufferToBase64(imageData);
@@ -30,7 +30,6 @@ const UserBusinesses = () => {
     }
   };
 
-  // Convert ArrayBuffer to base64 string
   const arrayBufferToBase64 = (buffer) => {
     if (!buffer) return '';
     const bytes = new Uint8Array(buffer);
@@ -76,6 +75,10 @@ const UserBusinesses = () => {
 
     fetchUserBusinesses();
   }, [userId, token, navigate]);
+
+  const handleViewReviews = (businessId) => {
+    navigate('/business/reviews', { state: { businessId } });
+  };
 
   if (loading) {
     return (
@@ -239,12 +242,20 @@ const UserBusinesses = () => {
                     <div className="created-at">
                       Created: {new Date(business.createdAt).toLocaleDateString()}
                     </div>
-                    <button 
-                      className="manage-btn"
-                      onClick={() => navigate(`/business/${business.id}`)}
-                    >
-                      Manage Business <ArrowRight size={16} />
-                    </button>
+                    <div className="business-actions">
+                      <button 
+                        className="reviews-btn"
+                        onClick={() => handleViewReviews(business.id)}
+                      >
+                        <Star size={16} /> View Reviews
+                      </button>
+                      <button 
+                        className="manage-btn"
+                        onClick={() => navigate(`/business/${business.id}`)}
+                      >
+                        Manage <ArrowRight size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

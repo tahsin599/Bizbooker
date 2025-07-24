@@ -22,6 +22,8 @@ import NoBusinessesFound from './modules/NoBusinessesFound';
 import BusinessConfig from './modules/BusinessConfig';
 import BookingsPage from './modules/BookingsPage'; // Import the BookingsPage component
 import Chatbot from './modules/Chatbot'; // Import the Chatbot component
+import AppointmentList from './modules/AppointmentList';
+import BusinessReviewsPage from './modules/BusinessReviewsPage'; // Import the BusinessReviewsPage component
 function App() {
   return (
     <BrowserRouter>
@@ -47,6 +49,8 @@ function App() {
           <Route path="/business/config/:businessId" element={<><BusinessConfig /></>} /> 
           <Route path="/bookings" element={<><BookingsPage/></>}/>
           <Route path="/chatbot" element={<><Navbar isAuthenticated={false} /><Chatbot /></>} />
+          <Route path= "/show-appointments" element={<><Navbar isAuthenticated={true} /><AppointmentList /></>} />
+          <Route path="/business/reviews" element={<><Navbar isAuthenticated={true} /><BusinessReviewsPage /></>} />
        
 
           {/* Add more routes as needed */}

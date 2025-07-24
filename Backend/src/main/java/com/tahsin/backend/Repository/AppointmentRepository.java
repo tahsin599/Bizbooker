@@ -84,7 +84,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
 
     @Query("SELECT a FROM Appointment a WHERE " +
-           "(a.status = 'PENDING' OR a.status = 'CONFIRMED') AND " +
+           "(a.status = 'PENDING' OR a.status = 'CONFIRMED' OR a.status = 'COMPLETED') AND " +
            "a.endTime < :currentTime")
     List<Appointment> findAppointmentsToComplete(@Param("currentTime") LocalDateTime currentTime);
 
