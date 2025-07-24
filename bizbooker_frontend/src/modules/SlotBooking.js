@@ -59,20 +59,13 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
     }
   };
 
-  const handleBookNow = () => {
-    if (selectedSlot) {
-      setSlotPrice(selectedSlot.price || 0);
-      setShowPayment(true);
-    }
-  };
-
-  const handlePaymentSuccess = async () => {
-    setShowPayment(false);
-    // Create appointment only after payment is successful
+  const handleBookNow = async () => {
     if (!selectedSlot) return;
+
     try {
+      // Step 1: Create pending appointment
       const appointmentData = {
-        customerId: localStorage.getItem('userId'), // Get from auth context/localStorage
+        customerId: localStorage.getItem('userId'),
         businessId: businessId,
         locationId: locationId,
         startTime: `${selectedDate}T${selectedSlot.time}`,
@@ -82,7 +75,10 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
         slotPrice: selectedSlot.price,
         notes: ""
       };
-      const response = await fetch(`${API_BASE_URL}/api/appointments`, {
+
+      console.log('Creating pending appointment:', appointmentData);
+      
+      const response = await fetch(`${API_BASE_URL}/api/appointments/pending`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -90,17 +86,61 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
         },
         body: JSON.stringify(appointmentData)
       });
-      if (response.ok) {
-        console.log('Appointment registered successfully in DB for user:', appointmentData.customerId);
-        navigate('/payment-success');
-      } else {
-        const error = await response.text();
-        alert('Failed to book appointment: ' + error);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create appointment');
       }
+
+      const createdAppointment = await response.json();
+      console.log('Pending appointment created:', createdAppointment);
+      console.log('Response structure:', JSON.stringify(createdAppointment, null, 2));
+      console.log('Response type:', typeof createdAppointment);
+      console.log('appointmentId from response:', createdAppointment.appointmentId);
+      console.log('id from response:', createdAppointment.id);
+      
+      // Store appointment ID in both localStorage and sessionStorage for redundancy
+      const appointmentId = createdAppointment.appointmentId || createdAppointment.id;
+      console.log('Extracted appointmentId:', appointmentId);
+      console.log('appointmentId type:', typeof appointmentId);
+      
+      if (!appointmentId) {
+        console.error('No appointment ID found in response:', createdAppointment);
+        console.error('Available keys in response:', Object.keys(createdAppointment));
+        throw new Error('No appointment ID returned from server');
+      }
+      
+      localStorage.setItem('pendingAppointmentId', String(appointmentId));
+      sessionStorage.setItem('pendingAppointmentId', String(appointmentId));
+      console.log('Stored appointmentId in localStorage:', localStorage.getItem('pendingAppointmentId'));
+      console.log('Stored appointmentId in sessionStorage:', sessionStorage.getItem('pendingAppointmentId'));
+      localStorage.setItem('pendingAppointmentData', JSON.stringify(appointmentData));
+      sessionStorage.setItem('pendingAppointmentData', JSON.stringify(appointmentData));
+      
+      // Step 2: Show payment form
+      setSlotPrice(selectedSlot.price || 0);
+      setShowPayment(true);
+
     } catch (error) {
-      console.error('Error booking appointment:', error);
-      alert('Failed to book appointment. Please try again.');
+      console.error('Error creating appointment:', error);
+      alert('Failed to book appointment: ' + error.message);
     }
+  };
+
+  const handlePaymentSuccess = (paymentIntentId) => {
+    setShowPayment(false);
+    // Store payment intent ID in both localStorage and sessionStorage and navigate to success page
+    localStorage.setItem('paymentIntentId', paymentIntentId);
+    sessionStorage.setItem('paymentIntentId', paymentIntentId);
+    
+    console.log('Payment successful, stored paymentIntentId:', paymentIntentId);
+    console.log('Navigating to payment-success page');
+    
+    // Get the appointment ID to pass in URL for extra safety
+    const appointmentId = localStorage.getItem('pendingAppointmentId') || sessionStorage.getItem('pendingAppointmentId');
+    
+    // Navigate with URL parameters as backup for the data
+    navigate(`/payment-success?appointment_id=${appointmentId}&payment_intent_id=${paymentIntentId}`);
   };
 
   // Remove handleBookAppointment, now handled in handlePaymentSuccess

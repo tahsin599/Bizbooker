@@ -277,8 +277,47 @@ const BusinessService = () => {
         slot => slot.start === selectedTime
       );
       if (selectedSlot && selectedSlot.status === 'vacant' && selectedSlot.availableSlots > 0) {
-        // Prepare appointment data and store in localStorage
         try {
+          // Step 1: Create pending appointment first
+          const appointmentData = {
+            customerId: localStorage.getItem('userId'),
+            businessId,
+            locationId: selectedLocation.locationId,
+            startTime: `${selectedDate}T${selectedTime}:00`,
+            endTime: `${selectedDate}T${selectedSlot.end}:00`,
+            configId: selectedSlot.intervalData.configId,
+            userSelectedCount: selectedSlot.selectedCount || 1,
+            slotPrice: selectedSlot.price || 0,
+            notes: ""
+          };
+
+          console.log('Creating pending appointment:', appointmentData);
+          
+          const appointmentResponse = await fetch(`${API_BASE_URL}/api/appointments/pending`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(appointmentData)
+          });
+
+          if (!appointmentResponse.ok) {
+            const errorData = await appointmentResponse.json();
+            throw new Error(errorData.error || 'Failed to create appointment');
+          }
+
+          const createdAppointment = await appointmentResponse.json();
+          console.log('Pending appointment created:', createdAppointment);
+          
+          // Store appointment ID for later use (backend returns appointmentId, not id)
+          const appointmentId = createdAppointment.appointmentId || createdAppointment.id;
+          localStorage.setItem('pendingAppointmentId', appointmentId);
+          sessionStorage.setItem('pendingAppointmentId', appointmentId);
+          localStorage.setItem('pendingAppointmentData', JSON.stringify(appointmentData));
+          sessionStorage.setItem('pendingAppointmentData', JSON.stringify(appointmentData));
+
+          // Step 2: Create Stripe checkout session
           const res = await fetch(`${API_BASE_URL}/api/payments/create-checkout-session`, {
             method: 'POST',
             headers: {
@@ -296,28 +335,21 @@ const BusinessService = () => {
               customerId: localStorage.getItem('userId')
             })
           });
-          const data = await res.json();
-          if (data.url && data.sessionId) {
-            // Store appointment data with Stripe sessionId as paymentReference
-            const appointmentData = {
-              customerId: localStorage.getItem('userId'),
-              businessId,
-              locationId: selectedLocation.locationId,
-              startTime: `${selectedDate}T${selectedTime}:00`,
-              endTime: `${selectedDate}T${selectedSlot.end}:00`,
-              configId: selectedSlot.intervalData.configId,
-              userSelectedCount: selectedSlot.selectedCount || 1,
-              slotPrice: selectedSlot.price || 0,
-              notes: "",
-              paymentReference: data.sessionId
-            };
-            localStorage.setItem("pendingAppointment", JSON.stringify(appointmentData));
-            window.location.href = data.url; // Redirect to Stripe Checkout
+          
+          const stripeData = await res.json();
+          if (stripeData.url && stripeData.sessionId) {
+            // Store the session ID as payment reference
+            localStorage.setItem('stripeSessionId', stripeData.sessionId);
+            sessionStorage.setItem('stripeSessionId', stripeData.sessionId);
+            
+            // Redirect to Stripe Checkout
+            window.location.href = stripeData.url;
           } else {
-            message.error('Failed to initiate payment.');
+            throw new Error('Failed to create Stripe checkout session');
           }
         } catch (err) {
-          message.error('Payment error.');
+          console.error('Booking error:', err);
+          alert('Failed to book appointment: ' + err.message);
         }
       }
     }
@@ -380,7 +412,7 @@ const BusinessService = () => {
       {/* Success Booking Modal */}
       <Modal
         title="Booking Confirmation"
-        visible={bookingSuccess}
+        open={bookingSuccess}
         onOk={() => {
           setBookingSuccess(false);
           setSelectedDate(null);

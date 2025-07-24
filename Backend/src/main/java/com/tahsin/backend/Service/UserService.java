@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,14 +30,15 @@ public class UserService {
     @Autowired
     AuthenticationManager authmanager;
 
-    private BCryptPasswordEncoder encoder=new BCryptPasswordEncoder(12);
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public User register(User user,MultipartFile profilePicture) throws IOException {
         if (profilePicture == null) {
             throw new IllegalArgumentException("Profile picture cannot be null");
         }
         
-        user.setPassword(encoder.encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         
 
         user.setImageName(profilePicture.getOriginalFilename());

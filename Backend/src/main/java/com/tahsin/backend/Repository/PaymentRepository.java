@@ -18,6 +18,10 @@ import com.tahsin.backend.Model.Payment;
 @Component
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByAppointment(Appointment appointment);
+    
+    @Query("SELECT p FROM Payment p WHERE p.appointment.id = :appointmentId")
+    Optional<Payment> findByAppointmentId(@Param("appointmentId") Long appointmentId);
+    
     Optional<Payment> findByTransactionId(String transactionId);
     Optional<Payment> findByStripePaymentIntentId(String stripePaymentIntentId);
     

@@ -40,7 +40,7 @@ public class Payment {
     private String transactionId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(length = 512)

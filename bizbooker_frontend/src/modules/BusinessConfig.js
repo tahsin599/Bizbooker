@@ -326,7 +326,7 @@ const BusinessConfig = () => {
 
       <Modal
         title={<><CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />Configuration Saved Successfully!</>}
-        visible={successModalVisible}
+        open={successModalVisible}
         onOk={() => setSuccessModalVisible(false)}
         onCancel={() => setSuccessModalVisible(false)}
         footer={[

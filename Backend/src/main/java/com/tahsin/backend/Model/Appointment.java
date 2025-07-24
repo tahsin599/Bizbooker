@@ -49,7 +49,7 @@ public class Appointment {
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
     
@@ -61,6 +61,7 @@ public class Appointment {
     private String cancellationReason;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private CancelledBy cancelledBy;
 
     @CreationTimestamp
@@ -216,11 +217,21 @@ public class Appointment {
 
     @Override
     public String toString() {
-        return "Appointment [id=" + id + ", customer=" + customer + ", business=" + business + ", location=" + location
-                + ", service=" + service + ", startTime=" + startTime + ", endTime=" + endTime + ", status=" + status
-                + ", notes=" + notes + ", cancellationReason=" + cancellationReason + ", cancelledBy=" + cancelledBy
-                + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + ", payment=" + payment + ", review="
-                + review + ", couponRedemption=" + couponRedemption + "]";
+        return "Appointment [id=" + id +
+            ", customerId=" + (customer != null ? customer.getId() : null) +
+            ", businessId=" + (business != null ? business.getId() : null) +
+            ", locationId=" + (location != null ? location.getId() : null) +
+            ", serviceId=" + (service != null ? service.getId() : null) +
+            ", startTime=" + startTime +
+            ", endTime=" + endTime +
+            ", status=" + status +
+            ", slotPrice=" + slotPrice +
+            ", notes=" + notes +
+            ", cancellationReason=" + cancellationReason +
+            ", cancelledBy=" + cancelledBy +
+            ", createdAt=" + createdAt +
+            ", updatedAt=" + updatedAt +
+            "]";
     }
 
     

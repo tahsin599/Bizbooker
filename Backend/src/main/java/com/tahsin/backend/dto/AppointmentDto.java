@@ -1,13 +1,17 @@
 package com.tahsin.backend.dto;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class AppointmentDto {
     private Long customerId;
     private Long businessId;
     private Long locationId;
     private String paymentReference;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
     private String notes;
     private Long configId;

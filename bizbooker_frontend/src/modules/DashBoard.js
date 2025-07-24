@@ -402,7 +402,7 @@ const Dashboard = () => {
       {/* Appointment Details Modal */}
       <Modal
         title="Appointment Details"
-        visible={showAppointmentModal}
+        open={showAppointmentModal}
         onOk={() => setShowAppointmentModal(false)}
         onCancel={() => setShowAppointmentModal(false)}
         footer={[
