@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import com.tahsin.backend.Repository.BusinessLocationRepository;
 import com.tahsin.backend.Repository.BusinessRepository;
 import com.tahsin.backend.Repository.ServiceCategoryRepository;
 import com.tahsin.backend.Repository.UserRepository;
+import com.tahsin.backend.dto.PendingBusinessDTO;
 
 @Service
 @Transactional
@@ -30,10 +32,9 @@ public class BusinessService {
     @Autowired
     private UserRepository userRepository;
 
-
     @Autowired
     private BusinessLocationRepository locationRepository;
-    @Autowired 
+    @Autowired
     private NotificationService notificationService;
 
     public boolean businessNameExists(String businessName) {
@@ -41,22 +42,22 @@ public class BusinessService {
     }
 
     public Business registerBusiness(
-            Long userId, String businessName, String description, 
+            Long userId, String businessName, String description,
             String categoryName, MultipartFile image,
-            String address, String area, String city, 
+            String address, String area, String city,
             String postalCode, String contactPhone, String contactEmail) throws IOException {
 
         // 1. Get or create the service category
         ServiceCategory category = categoryRepository.findByName(categoryName)
-            .orElseGet(() -> {
-                ServiceCategory newCategory = new ServiceCategory();
-                newCategory.setName(categoryName);
-                return categoryRepository.save(newCategory);
-            });
+                .orElseGet(() -> {
+                    ServiceCategory newCategory = new ServiceCategory();
+                    newCategory.setName(categoryName);
+                    return categoryRepository.save(newCategory);
+                });
 
         // 2. Get the owner
         User owner = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // 3. Create the business
         Business business = new Business();
@@ -88,9 +89,10 @@ public class BusinessService {
         // 5. Set relationships and save
         business.setLocations(List.of(location));
         Business savedBusiness = businessRepository.save(business);
-        notificationService.addNotification("Your Business Creation request has been submitted. We will check your request and let you know our feedbacks and you will be notified if your business gets approved", userId,"Business Creation",business.getBusinessName());
+        notificationService.addNotification(
+                "Your Business Creation request has been submitted. We will check your request and let you know our feedbacks and you will be notified if your business gets approved",
+                userId, "Business Creation", business.getBusinessName());
 
-        
         return savedBusiness;
     }
 
@@ -102,10 +104,10 @@ public class BusinessService {
     public Business getBusinessById(Long id) {
         // TODO Auto-generated method stub
         return businessRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Business not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Business not found with id: " + id));
     }
 
-   @Autowired
+    @Autowired
     private ServiceCategoryRepository categoryRepository;
 
     public Page<Business> findBusinessesForCustomers(Long categoryId, String area, Pageable pageable) {
@@ -116,7 +118,7 @@ public class BusinessService {
         } else if (area != null) {
             return businessRepository.findByLocationsArea(area, pageable);
         }
-        return businessRepository.findAll(pageable);
+        return businessRepository.findByApprovalStatus(ApprovalStatus.APPROVED, pageable);
     }
 
     public List<Business> findRandomBusinesses(int count) {
@@ -126,8 +128,29 @@ public class BusinessService {
     public List<ServiceCategory> getAllCategories() {
         return categoryRepository.findAll();
     }
+
+    public Page<PendingBusinessDTO> getPendingBusinesses(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Business> pendingBusinesses=businessRepository.findPendingBusinessesWithDetails(ApprovalStatus.PENDING, pageable);
+        return pendingBusinesses.map(this::convertToPendingBusinessDTO);
+    }
+
+    private PendingBusinessDTO convertToPendingBusinessDTO(Business business) {
+        PendingBusinessDTO dto = new PendingBusinessDTO();
+        dto.setId(business.getId());
+        dto.setBusinessName(business.getBusinessName());
+
+        // Set owner information
+        User owner = business.getOwner();
+        if (owner != null) {
+            dto.setOwnerName(owner.getName());
+            dto.setEmail(owner.getEmail());
+            dto.setImageName(owner.getImageName());
+            dto.setImageType(owner.getImageType());
+            dto.setImageData(owner.getImageData());
+        }
+
+        return dto;
+    }
+
 }
-
-
-
-    

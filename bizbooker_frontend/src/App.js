@@ -24,6 +24,8 @@ import BookingsPage from './modules/BookingsPage'; // Import the BookingsPage co
 import Chatbot from './modules/Chatbot'; // Import the Chatbot component
 import AppointmentList from './modules/AppointmentList';
 import BusinessReviewsPage from './modules/BusinessReviewsPage'; // Import the BusinessReviewsPage component
+import BusinessApprovalDashboard from './modules/PendingBusinesses';
+import PendingBusinesses from './modules/PendingBusinesses';
 function App() {
   return (
     <BrowserRouter>
@@ -51,6 +53,7 @@ function App() {
           <Route path="/chatbot" element={<><Navbar isAuthenticated={false} /><Chatbot /></>} />
           <Route path= "/show-appointments" element={<><Navbar isAuthenticated={true} /><AppointmentList /></>} />
           <Route path="/business/reviews" element={<><Navbar isAuthenticated={true} /><BusinessReviewsPage /></>} />
+             <Route path="/approve" element={<><Navbar isAuthenticated={true} /><PendingBusinesses/></>} />
        
 
           {/* Add more routes as needed */}

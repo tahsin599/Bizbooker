@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, MapPin, Filter, ChevronRight } from 'lucide-react';
 import './BusinessListingPage.css';
+import { API_BASE_URL } from '../config/api';   
 
 const BusinessListingPage = () => {
     const [businesses, setBusinesses] = useState([]);
@@ -51,12 +52,13 @@ const BusinessListingPage = () => {
     useEffect(() => {
         const fetchRandomBusinesses = async () => {
             try {
-                const response = await fetch('http://localhost:8080/api/customer/businesses/random?count=6', {
+                const response = await fetch(`${API_BASE_URL}/api/customer/businesses/random?count=6`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 const data = await response.json();
+                console.log(data);
                 setBusinesses(data);
             } catch (err) {
                 setError(err.message);
@@ -71,7 +73,8 @@ const BusinessListingPage = () => {
         const fetchFilters = async () => {
             try {
                 // Fetch categories
-                const categoriesResponse = await fetch('http://localhost:8080/api/customer/businesses/categories', {
+              
+                const categoriesResponse = await fetch(`${API_BASE_URL}/api/customer/businesses/categories`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -95,7 +98,7 @@ const BusinessListingPage = () => {
         };
 
         fetchFilters();
-    }, [token, businesses]);
+    }, [token,businesses]);
 
     // Fetch more businesses when scrolling or filters change
     const fetchBusinesses = useCallback(async () => {
@@ -113,6 +116,7 @@ const BusinessListingPage = () => {
                 }
             });
             const data = await response.json();
+            console.log('Fetched businesses:', data);
             
             if (page === 0) {
                 setBusinesses(data.content);

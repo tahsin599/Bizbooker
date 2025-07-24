@@ -6,7 +6,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,9 +20,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.tahsin.backend.Model.ApprovalStatus;
 import com.tahsin.backend.Model.Business;
+import com.tahsin.backend.Repository.BusinessRepository;
 import com.tahsin.backend.Service.BusinessService;
+import com.tahsin.backend.Service.JWTService;
+import com.tahsin.backend.Service.UserService;
 import com.tahsin.backend.dto.BusinessDTO;
+
+import jakarta.transaction.TransactionScoped;
+import jakarta.transaction.Transactional;
 
 @RestController
 @RequestMapping("/api/business")
@@ -27,6 +37,10 @@ public class BusinessController {
 
     @Autowired
     private BusinessService businessService;
+    @Autowired
+    private JWTService jwtService;
+    @Autowired
+    private BusinessRepository businessRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerBusiness(
@@ -141,5 +155,94 @@ public class BusinessController {
         
         return dto;
     }
+
+    @GetMapping("/pending")
+    public ResponseEntity<?> getPendingBusinesses(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("Authorization") String authHeader) {
+        // Check if the user is an admin
+        if (!authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access"));
+        }
+        String token = authHeader.substring(7);
+        
+        String username=jwtService.extractUsername(token);
+        System.out.println("Username from token: " + username);
+        if (username == null || !username.equals("admin")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+        
+        try {
+            return ResponseEntity.ok(businessService.getPendingBusinesses(page, size));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch pending businesses"));
+        }
+    }
+
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<?> approveBusiness(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+        // Check if the user is an admin
+        if (!authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access"));
+        }
+        String token = authHeader.substring(7);
+        
+        String username=jwtService.extractUsername(token);
+        System.out.println("Username from token: " + username);
+        if (username == null || !username.equals("admin")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+        
+        try {
+            Business business=businessRepository.findById(id).orElse(null);
+            if(business == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Business not found"));
+            }
+            business.setApprovalStatus(ApprovalStatus.APPROVED);
+            business.setIsApproved(true);
+            businessRepository.save(business);
+            
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Business approved successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to approve business"));
+        }
+    }
+
+    @Transactional
+
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<?> rejectBusiness(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+        // Check if the user is an admin
+        if (!authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access"));
+        }
+        String token = authHeader.substring(7);
+        
+        String username=jwtService.extractUsername(token);
+        System.out.println("Username from token: " + username);
+        if (username == null || !username.equals("admin")) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+        
+        try {
+            Business business = businessRepository.findById(id).orElse(null);
+            if (business == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Business not found"));
+            }
+            business.setApprovalStatus(ApprovalStatus.REJECTED);
+            business.setIsApproved(false);
+            businessRepository.save(business);
+            
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Business rejected successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to reject business"));
+        }
+    }
+
 
 }

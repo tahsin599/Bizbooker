@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
+import com.tahsin.backend.Model.ApprovalStatus;
 import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.User;
 
@@ -37,23 +38,34 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
         @Query("SELECT DISTINCT b FROM Business b " +
            "LEFT JOIN b.locations l " +
            "WHERE (:categoryId IS NULL OR b.serviceCategory.id = :categoryId) " +
-           "AND (:area IS NULL OR l.area = :area)")
+           "AND (:area IS NULL OR l.area = :area) AND b.approvalStatus = 'APPROVED'")
     Page<Business> findByServiceCategoryIdAndLocationsArea(
             @Param("categoryId") Long categoryId,
             @Param("area") String area,
             Pageable pageable);
 
-    @Query("SELECT b FROM Business b WHERE b.serviceCategory.id = :categoryId")
+    @Query("SELECT b FROM Business b WHERE b.serviceCategory.id = :categoryId and b.approvalStatus = 'APPROVED'")
     Page<Business> findByServiceCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
 
-    @Query("SELECT DISTINCT b FROM Business b LEFT JOIN b.locations l WHERE l.area = :area")
+    @Query("SELECT DISTINCT b FROM Business b LEFT JOIN b.locations l WHERE l.area = :area AND b.approvalStatus = 'APPROVED'")
     Page<Business> findByLocationsArea(@Param("area") String area, Pageable pageable);
 
-    @Query(value = "SELECT * FROM business ORDER BY RAND() LIMIT :count", nativeQuery = true)
+   @Query(value = "SELECT * FROM business b WHERE b.approval_status = 'APPROVED' ORDER BY RAND() LIMIT :count", nativeQuery = true)
     List<Business> findRandomBusinesses(@Param("count") int count);
 
     @Query("SELECT b FROM Business b WHERE LOWER(b.businessName) = LOWER(:name)")
     Business findByBusinessNameIgnoreCase(@Param("name") String name);
+
+        @Query("SELECT b FROM Business b WHERE b.approvalStatus = :status ORDER BY b.createdAt DESC")
+    Page<Business> findByApprovalStatus(ApprovalStatus status, Pageable pageable);
+
+    // Alternative method if you need to join fetch related entities
+    @Query("SELECT DISTINCT b FROM Business b " +
+           "LEFT JOIN FETCH b.owner " +
+           "LEFT JOIN FETCH b.serviceCategory " +
+           "WHERE b.approvalStatus = :status " +
+           "ORDER BY b.createdAt DESC")
+    Page<Business> findPendingBusinessesWithDetails(ApprovalStatus status, Pageable pageable);
    
     
 }
