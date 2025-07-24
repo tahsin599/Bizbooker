@@ -26,10 +26,10 @@ public class AIMessage {
     private AIConversation conversation;
 
     
-    @Column(nullable = false)
+   @Column(nullable = false, length = 5000) // Increased to 5000 characters
     private String userMessage;
 
-    
+    @Column(length = 10000) // Increased to 10000 characters
     private String aiReply;
 
     @CreationTimestamp

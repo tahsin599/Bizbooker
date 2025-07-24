@@ -29,6 +29,7 @@ public class AIMessageController {
         // Get messages from service
         List<AIMessage> messages = messageService.getMessagesByConversation(conversationId, page);
         
+        
         // Convert to DTOs
         List<AIMessageDTO> messageDTOs = messages.stream()
                 .map(this::convertToDTO)

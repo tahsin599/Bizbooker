@@ -6,10 +6,13 @@ import com.tahsin.backend.Model.AIConversation;
 import com.tahsin.backend.Model.AIMessage;
 import com.tahsin.backend.Model.Appointment;
 import com.tahsin.backend.Model.Business;
+import com.tahsin.backend.Model.BusinessHours;
 import com.tahsin.backend.Model.BusinessLocation;
 import com.tahsin.backend.Model.ServiceCategory;
 import com.tahsin.backend.Model.SlotInterval;
+import com.tahsin.backend.Model.User;
 import com.tahsin.backend.Repository.AppointmentRepository;
+import com.tahsin.backend.Repository.BusinessHoursRepository;
 import com.tahsin.backend.Repository.BusinessLocationRepository;
 import com.tahsin.backend.Repository.BusinessRepository;
 import com.tahsin.backend.Repository.ServiceCategoryRepository;
@@ -27,9 +30,11 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,7 +58,8 @@ public class GeminiModelController {
     private AppointmentRepository appointmentRepository;
     @Autowired
     private BusinessLocationRepository businessLocationRepository;
-
+    @Autowired
+    private BusinessHoursRepository businessHoursRepository;
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
     public GeminiModelController(RestClient restClient,
@@ -66,6 +72,10 @@ public class GeminiModelController {
         this.businessRepository = businessRepository;
         this.slotIntervalRepository = slotIntervalRepository;
         
+    }
+    public static int mapDayOfWeekToNumber(DayOfWeek dayOfWeek) {
+        // Java's DayOfWeek enum starts with Monday=1, so we adjust
+        return (dayOfWeek.getValue() % 7); // Sunday=0, Monday=1, ..., Saturday=6
     }
 
     @PostMapping("/chat")
@@ -112,6 +122,7 @@ public class GeminiModelController {
 
                     B. When creating a business:
                        - ALL info: "(downtown,Springfield,123 Main St,Bob's Burgers):BusinessCreationRequest"
+                       - if user wants to know how to add or create their business on this website then reposnd with "(na:na:na:na):BusinessCreationRequest"
                        - Missing info: "(downtown:na:123 Main St:Bob's Burgers):BusinessCreationRequest"
 
                     C. When searching business types:
@@ -135,6 +146,11 @@ public class GeminiModelController {
                     H. When checking locations:
                        "(Grand Hotel):locationCheck"
                        - Missing name: "(na):locationCheck"
+                    I.if the question is about how the system works or how to use it:
+                       "(na):Inquiry"
+
+                    J. If the question is about how to book an appointment:
+                          "(na):BookingInquiry"
 
                     I. For other questions:
                        "(na):(na)"
@@ -224,14 +240,16 @@ public class GeminiModelController {
             // Route to appropriate handler based on response type
             return switch (responseType) {
                 case "categoryRequest" -> handleCategoryRequest(parameters);
-                case "BusinessCreationRequest" -> handleBusinessCreationRequest(parameters);
+                case "BusinessCreationRequest" -> handleBusinessCreationRequest(parameters,conversationId);
                 case "searchCategory" -> handleSearchCategory(parameters);
                 case "searchBusiness" -> handleSearchBusiness(parameters, conversationId);
                 case "BookingCategory" -> handleBookingCategory(parameters);
-                case "BookingBusiness" -> handleBookingBusiness(parameters);
+                case "BookingBusiness" -> handleBookingBusiness(parameters,conversationId);
                 case "checkCategory" -> handleCheckCategory(parameters);
                 case "CheckSlot" -> handleCheckSlot(parameters);
                 case "locationCheck" -> handleLocationCheck(parameters);
+                case "Inquiry" -> handleEnquiry(conversationId);
+                case "BookingInquiry" -> handleBookingEnquiry();
                 default -> "(na):(na)";
             };
         } catch (Exception e) {
@@ -239,6 +257,18 @@ public class GeminiModelController {
             return "(na):(na)";
         }
     }
+
+    private String handleEnquiry(Long conversationId) {
+        User user=conversationService.getConversationById(conversationId).getUser();
+        return "Hello "+user.getName() +"! I am Bizbooker, your personal business assistant. I can help you find businesses, book appointments, and answer your questions about our services. Just ask me anything related to businesses or bookings, and I'll do my best to assist you!";
+        
+    }
+
+    private String handleBookingEnquiry() {
+        return "You can go to the services option on top your dashboard where you can filter based on different services and areas also you can search for businesses in the search area. After finding a business you will be able book it from the profile of that business.Also to make your life easier,I can help you book appointments with businesses. Just tell me the business name, location, and your preferred date and time, and I'll check availability for you and I can also book for you.";
+    }
+
+    
 
     private String extractResponseText(String jsonResponse) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
@@ -291,53 +321,12 @@ public class GeminiModelController {
         return "(" + categoryName + "):categoryRequest";
     }
 
-    private String handleBusinessCreationRequest(String params) {
-        try {
-            // Split parameters into components (area:city:addressLine:businessName)
-            String[] parts = params.split(":");
+    private String handleBusinessCreationRequest(String params,Long conversationId) {
+       
+        User user = conversationService.getConversationById(conversationId).getUser();
+       return "Hey there , "+user.getName()+" ! You can add your own businesses for other customers to find and book appointments with. Go to the 'Create Business' section in your dashboard and fill out the required information. If you need help, just ask me!Then after that you can add business hours for your business and slots so that customers can book appointments with it you can do theese by going to my business section in your dashborad.Thank you";
 
-            // Validate required fields (businessName is mandatory)
-            if (parts.length < 4) {
-                return "(missing parameters):BusinessCreationRequest";
-            }
-
-            String area = parts[0].equals("na") ? null : parts[0];
-            String city = parts[1].equals("na") ? null : parts[1];
-            String addressLine = parts[2].equals("na") ? null : parts[2];
-            String businessName = parts[3].equals("na") ? null : parts[3];
-
-            // Validate business name exists
-            if (businessName == null || businessName.isBlank()) {
-                return "(business name required):BusinessCreationRequest";
-            }
-
-            // Build the full address (combine area and city if both exist)
-            String fullAddress = "";
-            if (area != null && city != null) {
-                fullAddress = area + ", " + city;
-            } else {
-                return "(area or city required):BusinessCreationRequest";
-            }
-
-            // If addressLine exists, append it
-            if (addressLine != null && !addressLine.isBlank()) {
-                if (!fullAddress.isEmpty()) {
-                    fullAddress += ", " + addressLine;
-                } else {
-                    fullAddress = addressLine;
-                }
-            }
-
-            // Create and save the business
-            // Business business = new Business();
-
-            // businessRepository.save(business);
-
-            return "(success):BusinessCreationRequest";
-        } catch (Exception e) {
-            log.error("Error creating business: " + params, e);
-            return "(error):BusinessCreationRequest";
-        }
+            
     }
 
     private String handleSearchCategory(String params) {
@@ -379,7 +368,7 @@ public class GeminiModelController {
         return "(" + categoryName + "):BookingCategory";
     }
 
-    private String handleBookingBusiness(String params) {
+    private String handleBookingBusiness(String params,Long conversationId) {
         System.out.println(params);
 
         String[] parts = params.split(":");
@@ -409,6 +398,14 @@ public class GeminiModelController {
         } catch (Exception e) {
             return "The date format is incorrect. Please use format like: 2023-12-25T14:00:00";
         }
+        LocalDateTime bdDateTime = LocalDateTime.now(ZoneId.of("Asia/Dhaka"));
+        if (desiredDateTime.isBefore(bdDateTime)) {
+            return "No slots can be booked in the past. Please provide a realistic date and time.";
+        }
+
+
+
+
         // Check if business exists
         Business business = businessRepository.findByBusinessNameIgnoreCase(businessName);
         if (business == null) {
@@ -448,6 +445,19 @@ public class GeminiModelController {
             return "Please provide a positive number of slots to book.";
         }
         BusinessLocation location = matchingLocation.get();
+
+        DayOfWeek dayOfWeek = desiredDateTime.getDayOfWeek();
+        int dayNumber = mapDayOfWeekToNumber(dayOfWeek);
+        BusinessHours businessHours = businessHoursRepository
+                .findByBusinessIdAndDayOfWeek(business.getId(), dayNumber)
+                .orElse(null);
+        if (businessHours == null) {
+            return "The buisness has not configured its slots yet so it can't be booked at this time. But you can search the business name and see its details and contect them using the contact information provided in the business profile.";
+        }
+        if(businessHours.getIsClosed()){
+            return "Sorry.The business is closed on this day. Please choose another day to book an appointment.";
+        }
+
         // Check slot availability (using your repository method)
         int availableSlots = slotIntervalRepository.getAvailableSlotsCount(
                 location.getId(),
@@ -481,6 +491,8 @@ public class GeminiModelController {
             slotInterval.setUsedSlots(slotInterval.getUsedSlots() + slotsToBook);
             System.out.println(slotInterval.getConfiguration().getId() );
             slotIntervalRepository.save(slotInterval);
+            appointment.setCustomer(conversationService.getConversationById(conversationId).getUser());
+            
             appointmentRepository.save(appointment);
             return "Successfully booked " + slotsToBook + " slot(s) at ";
         }
@@ -577,7 +589,21 @@ public class GeminiModelController {
     }
 
     private String handleLocationCheck(String businessName) {
-        return "(" + businessName + "):locationCheck";
+        Business business = businessRepository.findByBusinessNameIgnoreCase(businessName);
+        if (business == null) {
+            return "Sorry,There is no business with this name registered in our system. Please tell me if you need more help.";
+        }
+        List<BusinessLocation> locations = business.getLocations();
+        if (locations == null || locations.isEmpty()) {
+            return "The business '" + business.getBusinessName() + "' doesn't have any locations registered yet.";
+
+        }
+        String locationDetails = locations.stream()
+                .map(loc -> loc.getArea() + ", " + loc.getCity() + ", " + loc.getAddress())
+                .collect(Collectors.joining("; "));
+        return "The business " + business.getBusinessName() + " is located at " + locationDetails
+                + ". If you want to book an appointment with this business, please provide the date and time.";
+        
     }
 
     private void saveConversationMessages(AIConversation conversation,

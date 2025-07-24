@@ -3,6 +3,9 @@ package com.tahsin.backend.Service;
 import com.tahsin.backend.Model.AIConversation;
 import com.tahsin.backend.Model.User;
 import com.tahsin.backend.Repository.AIConversationRepository;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +34,18 @@ public class AIConversationService {
     public AIConversation updateConversation(AIConversation conversation) {
         return conversationRepository.save(conversation);
     }
+
+    public boolean deleteConversation(Long id) {
+        if (conversationRepository.existsById(id)) {
+            conversationRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public List<AIConversation> getConversations(User user) {
+        return conversationRepository.findByUser(user);
+    }   
 
     // Add other conversation-related methods as needed
 }
