@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import Navbar from './Navbar';
+import LocationSelectMap from './LocationSelectMap'; // Import the LocationSelectMap component
 import './BusinessDetail.css';
 
 const dayOfWeekMap = {
@@ -55,11 +56,8 @@ const BusinessDetailPage = () => {
   };
 
   const handleHoursClick = () => {
-
     navigate(`/business/config/${id}`);
-    // setShowEditHours(true); // Uncomment if you want to show edit hours modal instead`);
-  }
-
+  };
 
   useEffect(() => {
     const fetchBusinessDetails = async () => {
@@ -140,8 +138,6 @@ const BusinessDetailPage = () => {
 
   const imageUrl = getImageUrl(business.imageData, business.imageType);
   const primaryLocation = business.locations?.find(loc => loc.isPrimary) || business.locations?.[0];
-  console.log('Primary Location:', primaryLocation.locationId);
-  console.log(business.locations);
 
   return (
     <div className="business-detail-container">
@@ -222,6 +218,13 @@ const BusinessDetailPage = () => {
               <h2>Business Overview</h2>
               <p className="business-description">{business.description}</p>
               
+              {/* Map Section */}
+              <div className="map-section">
+                <h3>Location Map</h3>
+                <LocationSelectMap locations={business.locations} />
+                
+              </div>
+              
               <div className="info-section">
                 <h3>Primary Location</h3>
                 {primaryLocation ? (
@@ -269,6 +272,11 @@ const BusinessDetailPage = () => {
                 <button className="add-button" onClick={() => navigate(`/business/${business.id}/add-location`)}>
                   <Plus size={16} /> Add Location
                 </button>
+              </div>
+
+              {/* Locations Map */}
+              <div className="locations-map-container">
+                <LocationSelectMap locations={business.locations} />
               </div>
 
               {business.locations?.length > 0 ? (

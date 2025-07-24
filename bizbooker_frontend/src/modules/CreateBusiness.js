@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
-import './CreateBusiness.css';
 import { ArrowRight, X, Image as ImageIcon, MapPin, Phone, Mail } from 'lucide-react';
+import LocationMap from './LocationMap';
+import './CreateBusiness.css';
 
 const CreateBusiness = () => {
   const navigate = useNavigate();
@@ -17,13 +18,15 @@ const CreateBusiness = () => {
     area: '',
     city: '',
     postalCode: '',
+    lat: '',
+    lng: '',
     contactPhone: '',
     contactEmail: '',
     isPrimary: true
   });
 
   const [errors, setErrors] = useState({});
-  const [currentStep, setCurrentStep] = useState(1); // For multi-step form
+  const [currentStep, setCurrentStep] = useState(1);
 
   const businessCategories = [
     'Healthcare',
@@ -38,24 +41,6 @@ const CreateBusiness = () => {
     'Technology',
     'Other'
   ];
-
-  const cities = [
-    'Dhaka',
-    'Chittagong', 
-    'Sylhet',
-    'Rajshahi',
-    'Khulna',
-    'Barisal',
-    'Rangpur',
-    'Mymensingh',
-    'Comilla',
-    'Narayanganj',
-    'Gazipur',
-    'Cox\'s Bazar',
-    'Jessore',
-    'Bogra',
-    'Dinajpur'
-  ]; // Major cities in Bangladesh
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -87,6 +72,18 @@ const CreateBusiness = () => {
     }
   };
 
+  const handleLocationSelect = (location) => {
+    setFormData(prev => ({
+      ...prev,
+      address: location.street || location.fullAddress,
+      area: location.area,
+      city: location.city,
+      postalCode: location.postalCode,
+      lat: location.lat,
+      lng: location.lng
+    }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
@@ -115,7 +112,7 @@ const CreateBusiness = () => {
         newErrors.area = 'Area is required';
       }
       
-      if (!formData.city) {
+      if (!formData.city.trim()) {
         newErrors.city = 'City is required';
       }
       
@@ -146,53 +143,53 @@ const CreateBusiness = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (validateForm()) {
-    const formDataToSend = new FormData();
-    formDataToSend.append('userId', localStorage.getItem('userId'));
-    console.log("User ID:", localStorage.getItem('userId'));
-    formDataToSend.append('businessName', formData.businessName);
-    formDataToSend.append('description', formData.description);
-    formDataToSend.append('categoryName', formData.businessCategory);
-    formDataToSend.append('image', formData.image);
-    formDataToSend.append('address', formData.address);
-    formDataToSend.append('area', formData.area);
-    formDataToSend.append('city', formData.city);
-    formDataToSend.append('postalCode', formData.postalCode);
-    formDataToSend.append('contactPhone', formData.contactPhone);
-    formDataToSend.append('contactEmail', formData.contactEmail);
+    e.preventDefault();
+    
+    if (validateForm()) {
+      const formDataToSend = new FormData();
+      formDataToSend.append('userId', localStorage.getItem('userId'));
+      formDataToSend.append('businessName', formData.businessName);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('categoryName', formData.businessCategory);
+      formDataToSend.append('image', formData.image);
+      formDataToSend.append('address', formData.address);
+      formDataToSend.append('area', formData.area);
+      formDataToSend.append('city', formData.city);
+      formDataToSend.append('postalCode', formData.postalCode);
+      formDataToSend.append('lat', formData.lat);
+      formDataToSend.append('lng', formData.lng);
+      formDataToSend.append('contactPhone', formData.contactPhone);
+      formDataToSend.append('contactEmail', formData.contactEmail);
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/business/register`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formDataToSend
-      });
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/business/register`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formDataToSend
+        });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        // Handle business name exists error
-        if (data.error === "Business name already exists") {
-          setErrors(prev => ({...prev, businessName: data.error}));
+        const data = await response.json();
+        
+        if (!response.ok) {
+          if (data.error === "Business name already exists") {
+            setErrors(prev => ({...prev, businessName: data.error}));
+          }
+          throw new Error(data.error || 'Registration failed');
         }
-        throw new Error(data.error || 'Registration failed');
-      }
 
-      alert('Business registered successfully!');
-      // Redirect to user business portfolio dashboard
-      navigate('/userBusiness');
-    } catch (error) {
-      console.error('Error:', error);
-      if (error.message !== "Business name already exists") {
-        alert('Failed to register business: ' + error.message);
+        alert('Business registered successfully!');
+        navigate('/userBusiness');
+      } catch (error) {
+        console.error('Error:', error);
+        if (error.message !== "Business name already exists") {
+          alert('Failed to register business: ' + error.message);
+        }
       }
     }
-  }
-};
+  };
+
   return (
     <div className="create-business-container">
       <div className="create-business-content">
@@ -315,22 +312,29 @@ const CreateBusiness = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="address" className="form-label">
-                    Address <span className="required">*</span>
+                  <label className="form-label">
+                    Click on the map to select your business location <span className="required">*</span>
                   </label>
-                  <input
-                    type="text"
-                    id="address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.address ? 'error' : ''}`}
-                    placeholder="Street address"
-                  />
-                  {errors.address && <span className="error-message">{errors.address}</span>}
+                  <LocationMap onLocationSelect={handleLocationSelect} />
                 </div>
 
-                <div className="form-row">
+                <div className="location-details">
+                  <div className="form-group">
+                    <label htmlFor="address" className="form-label">
+                      Address <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className={`form-input ${errors.address ? 'error' : ''}`}
+                      placeholder="Street address"
+                    />
+                    {errors.address && <span className="error-message">{errors.address}</span>}
+                  </div>
+
                   <div className="form-group">
                     <label htmlFor="area" className="form-label">
                       Area/Neighborhood <span className="required">*</span>
@@ -351,35 +355,32 @@ const CreateBusiness = () => {
                     <label htmlFor="city" className="form-label">
                       City <span className="required">*</span>
                     </label>
-                    <select
+                    <input
+                      type="text"
                       id="city"
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
-                      className={`form-select ${errors.city ? 'error' : ''}`}
-                    >
-                      <option value="">Select city</option>
-                      {cities.map((city, index) => (
-                        <option key={index} value={city}>{city}</option>
-                      ))}
-                    </select>
+                      className={`form-input ${errors.city ? 'error' : ''}`}
+                      placeholder="City"
+                    />
                     {errors.city && <span className="error-message">{errors.city}</span>}
                   </div>
-                </div>
 
-                <div className="form-group">
-                  <label htmlFor="postalCode" className="form-label">
-                    Postal/Zip Code
-                  </label>
-                  <input
-                    type="text"
-                    id="postalCode"
-                    name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="Postal or zip code"
-                  />
+                  <div className="form-group">
+                    <label htmlFor="postalCode" className="form-label">
+                      Postal/Zip Code
+                    </label>
+                    <input
+                      type="text"
+                      id="postalCode"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      placeholder="Postal or zip code"
+                    />
+                  </div>
                 </div>
 
                 <div className="form-section-header">
