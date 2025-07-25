@@ -22,6 +22,9 @@ import NoBusinessesFound from './modules/NoBusinessesFound';
 import BusinessConfig from './modules/BusinessConfig';
 import BookingsPage from './modules/BookingsPage'; // Import the BookingsPage component
 import PaymentSuccess from './modules/PaymentSuccess';
+import StripeConnectDashboard from './modules/StripeConnectDashboard';
+import StripeOnboardingComplete from './modules/StripeOnboardingComplete';
+import StripeOnboarding from './modules/StripeOnboarding';
 function App() {
   return (
     <BrowserRouter>
@@ -47,6 +50,9 @@ function App() {
           <Route path="/business/config/:businessId" element={<><BusinessConfig /></>} /> 
           <Route path="/bookings" element={<><BookingsPage/></>}/>
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/stripe-connect-dashboard/:businessId" element={<StripeConnectDashboard />} />
+          <Route path="/stripe-onboarding/:businessId" element={<StripeOnboarding />} />
+          <Route path="/stripe-onboarding-complete/:businessId" element={<StripeOnboardingComplete />} />
        
 
           {/* Add more routes as needed */}

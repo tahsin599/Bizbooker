@@ -336,7 +336,19 @@ const BusinessService = () => {
             })
           });
           
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Failed to create checkout session:', errorText);
+            throw new Error(`Failed to create checkout session: ${errorText}`);
+          }
+          
           const stripeData = await res.json();
+          console.log('Stripe checkout session response:', stripeData);
+          
+          if (stripeData.error) {
+            throw new Error(`Stripe error: ${stripeData.error}`);
+          }
+          
           if (stripeData.url && stripeData.sessionId) {
             // Store the session ID as payment reference
             localStorage.setItem('stripeSessionId', stripeData.sessionId);
@@ -345,7 +357,8 @@ const BusinessService = () => {
             // Redirect to Stripe Checkout
             window.location.href = stripeData.url;
           } else {
-            throw new Error('Failed to create Stripe checkout session');
+            console.error('Invalid stripe response:', stripeData);
+            throw new Error('Failed to create Stripe checkout session - missing URL or session ID');
           }
         } catch (err) {
           console.error('Booking error:', err);

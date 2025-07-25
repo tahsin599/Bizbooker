@@ -13,8 +13,9 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import com.tahsin.backend.Model.Appointment;
+import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.Payment;
-import com.tahsin.backend.dto.PaymentDto;
+import com.tahsin.backend.Repository.BusinessRepository;
 
 import javax.annotation.PostConstruct;
 
@@ -25,23 +26,19 @@ public class PaymentController {
     private com.tahsin.backend.Service.PaymentService paymentService;
     @Autowired
     private com.tahsin.backend.Repository.AppointmentRepository appointmentRepository;
+    @Autowired
+    private BusinessRepository businessRepository;
 
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody com.tahsin.backend.dto.PaymentDto dto) {
         try {
             System.out.println("[PAYMENT] Creating payment: " + dto);
             
-            // First check if payment already exists for this appointment
-            Payment existingPayment = paymentService.getByAppointmentId(dto.appointmentId);
-            if (existingPayment != null) {
-                System.out.println("[PAYMENT] Payment already exists for appointment " + dto.appointmentId + ": " + existingPayment);
-                return ResponseEntity.ok(existingPayment);
-            }
-            
             Appointment appointment = appointmentRepository.findById(dto.appointmentId).orElse(null);
             if (appointment == null) {
                 return ResponseEntity.status(404).body("Appointment not found for ID: " + dto.appointmentId);
             }
+            
             Payment payment = new Payment();
             payment.setAppointment(appointment);
             payment.setAmount(dto.amount);
@@ -51,9 +48,27 @@ public class PaymentController {
             payment.setStatus(dto.status != null ? com.tahsin.backend.Model.PaymentStatus.valueOf(dto.status) : com.tahsin.backend.Model.PaymentStatus.PENDING);
             payment.setReceiptUrl(dto.receiptUrl);
             payment.setStripePaymentIntentId(dto.stripePaymentIntentId);
+            
+            // Use synchronized method to prevent duplicate payments
             Payment saved = paymentService.save(payment);
-            System.out.println("[PAYMENT] Payment created: " + saved);
+            System.out.println("[PAYMENT] Payment created/found: " + saved);
             return ResponseEntity.ok(saved);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Handle duplicate appointment_id constraint violation
+            System.out.println("[PAYMENT] Duplicate payment detected for appointment " + dto.appointmentId + ", fetching existing payment");
+            try {
+                Payment existingPayment = paymentService.getByAppointmentId(dto.appointmentId);
+                if (existingPayment != null) {
+                    System.out.println("[PAYMENT] Returning existing payment: " + existingPayment);
+                    return ResponseEntity.ok(existingPayment);
+                } else {
+                    System.out.println("[PAYMENT] Could not find existing payment after constraint violation");
+                    return ResponseEntity.status(500).body("Payment creation failed due to constraint violation but could not find existing payment");
+                }
+            } catch (Exception fetchException) {
+                System.out.println("[PAYMENT] Error fetching existing payment: " + fetchException.getMessage());
+                return ResponseEntity.status(500).body("Payment creation failed: " + e.getMessage());
+            }
         } catch (Exception e) {
             System.out.println("[PAYMENT EXCEPTION] " + e.getMessage());
             e.printStackTrace();
@@ -72,17 +87,89 @@ public class PaymentController {
     @PostMapping("/create-payment-intent")
     public Map<String, String> createPaymentIntent(@RequestBody Map<String, Object> data) {
         try {
-            Number amount = (Number) data.get("amount");
+            // Extract data from request body with proper type handling
+            Object amountObj = data.get("amount");
+            Object priceObj = data.get("price"); // Handle both 'amount' and 'price' fields
+            
+            // Get amount from either 'amount' or 'price' field
+            Number amount;
+            if (amountObj != null) {
+                if (amountObj instanceof String) {
+                    amount = Double.parseDouble((String) amountObj);
+                } else if (amountObj instanceof Number) {
+                    amount = (Number) amountObj;
+                } else {
+                    throw new IllegalArgumentException("Invalid amount type");
+                }
+            } else if (priceObj != null) {
+                if (priceObj instanceof String) {
+                    amount = Double.parseDouble((String) priceObj);
+                } else if (priceObj instanceof Number) {
+                    amount = (Number) priceObj;
+                } else {
+                    throw new IllegalArgumentException("Invalid price type");
+                }
+            } else {
+                throw new IllegalArgumentException("Amount or price is required");
+            }
+            
             String currency = (String) data.getOrDefault("currency", "usd");
-            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+            Long appointmentId = null;
+            
+            // Handle appointmentId with proper type checking
+            Object appointmentIdObj = data.get("appointmentId");
+            if (appointmentIdObj != null) {
+                if (appointmentIdObj instanceof String) {
+                    appointmentId = Long.parseLong((String) appointmentIdObj);
+                } else if (appointmentIdObj instanceof Number) {
+                    appointmentId = ((Number) appointmentIdObj).longValue();
+                }
+            }
+            
+            PaymentIntentCreateParams.Builder builder = PaymentIntentCreateParams.builder()
                     .setAmount(amount.longValue() * 100) // Stripe expects amount in cents
-                    .setCurrency(currency)
-                    .build();
-            PaymentIntent intent = PaymentIntent.create(params);
+                    .setCurrency(currency);
+            
+            // If appointmentId is provided, check if business has Stripe Connect account
+            if (appointmentId != null) {
+                Appointment appointment = appointmentRepository.findById(appointmentId).orElse(null);
+                if (appointment != null && appointment.getBusiness() != null) {
+                    String stripeAccountId = appointment.getBusiness().getStripeAccountId();
+                    Boolean chargesEnabled = appointment.getBusiness().getStripeChargesEnabled();
+                    
+                    // Only use destination charges if business has Stripe Connect properly set up
+                    if (stripeAccountId != null && !stripeAccountId.isEmpty() && 
+                        chargesEnabled != null && chargesEnabled) {
+                        // Use destination charges to send money to business owner
+                        // Take 10% platform fee (you can adjust this)
+                        long platformFee = amount.longValue() * 10; // 10% in cents
+                        
+                        builder.setTransferData(
+                            PaymentIntentCreateParams.TransferData.builder()
+                                .setDestination(stripeAccountId)
+                                .build()
+                        );
+                        builder.setApplicationFeeAmount(platformFee);
+                        
+                        System.out.println("[PAYMENT] Using destination charge to account: " + stripeAccountId + 
+                                         " with platform fee: " + platformFee + " cents");
+                    } else {
+                        System.out.println("[PAYMENT] Business doesn't have Stripe Connect set up, using platform account for payment");
+                    }
+                } else {
+                    System.out.println("[PAYMENT] Appointment or business not found, using platform account for payment");
+                }
+            } else {
+                System.out.println("[PAYMENT] No appointment ID provided, using platform account for payment");
+            }
+            
+            PaymentIntent intent = PaymentIntent.create(builder.build());
             Map<String, String> response = new HashMap<>();
             response.put("clientSecret", intent.getClientSecret());
             return response;
         } catch (Exception e) {
+            System.out.println("[PAYMENT ERROR] " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return error;
@@ -91,14 +178,44 @@ public class PaymentController {
 
     @PostMapping("/create-checkout-session")
     public Map<String, String> createCheckoutSession(@RequestBody Map<String, Object> data) {
-        Stripe.apiKey = "***REMOVED***";
         try {
-            Long price = ((Number) data.get("price")).longValue();
-            Long quantity = ((Number) data.get("quantity")).longValue();
+            // Handle price with proper type checking
+            Object priceObj = data.get("price");
+            Long price;
+            if (priceObj instanceof String) {
+                price = Long.parseLong((String) priceObj);
+            } else if (priceObj instanceof Number) {
+                price = ((Number) priceObj).longValue();
+            } else {
+                throw new IllegalArgumentException("Invalid price type");
+            }
+            
+            // Handle quantity with proper type checking
+            Object quantityObj = data.get("quantity");
+            Long quantity;
+            if (quantityObj instanceof String) {
+                quantity = Long.parseLong((String) quantityObj);
+            } else if (quantityObj instanceof Number) {
+                quantity = ((Number) quantityObj).longValue();
+            } else {
+                quantity = 1L; // Default to 1 if not provided
+            }
+            
+            // Handle businessId with proper type checking
+            Long businessId = null;
+            Object businessIdObj = data.get("businessId");
+            if (businessIdObj != null) {
+                if (businessIdObj instanceof String) {
+                    businessId = Long.parseLong((String) businessIdObj);
+                } else if (businessIdObj instanceof Number) {
+                    businessId = ((Number) businessIdObj).longValue();
+                }
+            }
+            
             String successUrl = "http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}"; // Stripe will replace {CHECKOUT_SESSION_ID}
             String cancelUrl = "http://localhost:3000/payment-cancel";   // Change to your frontend cancel URL
 
-            SessionCreateParams params = SessionCreateParams.builder()
+            SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl)
@@ -117,10 +234,41 @@ public class PaymentController {
                                 .build()
                         )
                         .build()
-                )
-                .build();
+                );
 
-            Session session = Session.create(params);
+            // Check if business has Stripe Connect account for destination charges
+            if (businessId != null) {
+                Business business = businessRepository.findById(businessId).orElse(null);
+                if (business != null && business.getStripeAccountId() != null && 
+                    !business.getStripeAccountId().isEmpty() &&
+                    business.getStripeChargesEnabled() != null && business.getStripeChargesEnabled()) {
+                    
+                    // Calculate platform fee (10% of total amount)
+                    long totalAmount = price * quantity * 100; // Total in cents
+                    long platformFee = totalAmount / 10; // 10% platform fee
+                    
+                    // Add payment intent data for destination charges
+                    paramsBuilder.setPaymentIntentData(
+                        SessionCreateParams.PaymentIntentData.builder()
+                            .setTransferData(
+                                SessionCreateParams.PaymentIntentData.TransferData.builder()
+                                    .setDestination(business.getStripeAccountId())
+                                    .build()
+                            )
+                            .setApplicationFeeAmount(platformFee)
+                            .build()
+                    );
+                    
+                    System.out.println("[CHECKOUT] Using destination charge to account: " + business.getStripeAccountId() + 
+                                     " with platform fee: " + platformFee + " cents");
+                } else {
+                    System.out.println("[CHECKOUT] Business doesn't have Stripe Connect set up, using platform account for payment");
+                }
+            } else {
+                System.out.println("[CHECKOUT] No business ID provided, using platform account for payment");
+            }
+
+            Session session = Session.create(paramsBuilder.build());
             Map<String, String> response = new HashMap<>();
             response.put("url", session.getUrl());
             response.put("sessionId", session.getId());

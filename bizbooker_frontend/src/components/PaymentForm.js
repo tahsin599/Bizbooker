@@ -3,7 +3,7 @@ import React from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { API_BASE_URL } from '../config/api';
 
-const PaymentForm = ({ amount, onSuccess }) => {
+const PaymentForm = ({ amount, appointmentId, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -25,16 +25,21 @@ const PaymentForm = ({ amount, onSuccess }) => {
     try {
       const token = localStorage.getItem('token');
       
-      console.log('Creating payment intent for amount:', amount);
+      console.log('Creating payment intent for amount:', amount, 'appointmentId:', appointmentId);
       
       // Call backend to create PaymentIntent and get clientSecret
+      const requestBody = { amount };
+      if (appointmentId) {
+        requestBody.appointmentId = appointmentId;
+      }
+      
       const response = await fetch(`${API_BASE_URL}/api/payments/create-payment-intent`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ amount })
+        body: JSON.stringify(requestBody)
       });
       
       if (!response.ok) {

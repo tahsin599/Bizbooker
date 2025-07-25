@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Briefcase, MapPin, Phone, Mail, Clock, Calendar, Plus, Edit, 
-  Trash2, ChevronLeft, Check, X, Clock as HoursIcon, Image 
+  Trash2, ChevronLeft, Check, X, Clock as HoursIcon, Image, CreditCard 
 } from 'lucide-react';
 import { API_BASE_URL } from '../config/api';
 import Navbar from './Navbar';
@@ -372,6 +372,27 @@ const BusinessDetailPage = () => {
           {activeTab === 'settings' && (
             <div className="settings-tab">
               <h2>Business Settings</h2>
+              
+              <div className="settings-card">
+                <h3>Payment Setup</h3>
+                <p>Set up your payment account to receive money directly from customer bookings.</p>
+                <div className="setting-row">
+                  <div>
+                    <CreditCard size={18} />
+                    <div>
+                      <span>Stripe Payment Account</span>
+                      <p>Connect your bank account to receive payments automatically</p>
+                    </div>
+                  </div>
+                  <button 
+                    className="setup-button"
+                    onClick={() => navigate(`/stripe-connect-dashboard/${business.id}`)}
+                  >
+                    <CreditCard size={16} /> Setup Payments
+                  </button>
+                </div>
+              </div>
+
               <div className="settings-card">
                 <h3>Business Information</h3>
                 <div className="setting-row">

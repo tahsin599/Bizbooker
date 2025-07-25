@@ -101,6 +101,19 @@ public class Business {
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL)
     private List<BusinessHoliday> holidays = new ArrayList<>();
 
+    // Stripe Connect fields
+    @Column(name = "stripe_account_id")
+    private String stripeAccountId;
+
+    @Column(name = "stripe_onboarding_completed")
+    private Boolean stripeOnboardingCompleted = false;
+
+    @Column(name = "stripe_charges_enabled")
+    private Boolean stripeChargesEnabled = false;
+
+    @Column(name = "stripe_payouts_enabled")
+    private Boolean stripePayoutsEnabled = false;
+
      public Long getId() {
         return id;
     }
@@ -239,6 +252,39 @@ public class Business {
 
     public void setHolidays(List<BusinessHoliday> holidays) {
         this.holidays = holidays;
+    }
+
+    // Stripe Connect getters and setters
+    public String getStripeAccountId() {
+        return stripeAccountId;
+    }
+
+    public void setStripeAccountId(String stripeAccountId) {
+        this.stripeAccountId = stripeAccountId;
+    }
+
+    public Boolean getStripeOnboardingCompleted() {
+        return stripeOnboardingCompleted;
+    }
+
+    public void setStripeOnboardingCompleted(Boolean stripeOnboardingCompleted) {
+        this.stripeOnboardingCompleted = stripeOnboardingCompleted;
+    }
+
+    public Boolean getStripeChargesEnabled() {
+        return stripeChargesEnabled;
+    }
+
+    public void setStripeChargesEnabled(Boolean stripeChargesEnabled) {
+        this.stripeChargesEnabled = stripeChargesEnabled;
+    }
+
+    public Boolean getStripePayoutsEnabled() {
+        return stripePayoutsEnabled;
+    }
+
+    public void setStripePayoutsEnabled(Boolean stripePayoutsEnabled) {
+        this.stripePayoutsEnabled = stripePayoutsEnabled;
     }
 }
 

@@ -242,7 +242,11 @@ const SlotBooking = ({ businessId, locationId, onSlotSelect }) => {
           <div style={{ background: '#fff', padding: 32, borderRadius: 8, minWidth: 350, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
             <h2 style={{marginBottom: 24}}>Pay with Card</h2>
             <Elements stripe={stripePromise}>
-              <PaymentForm amount={slotPrice} onSuccess={handlePaymentSuccess} />
+              <PaymentForm 
+                amount={slotPrice} 
+                appointmentId={localStorage.getItem('pendingAppointmentId') || sessionStorage.getItem('pendingAppointmentId')}
+                onSuccess={handlePaymentSuccess} 
+              />
             </Elements>
             <button onClick={() => setShowPayment(false)} style={{ marginTop: 16, background: '#eee', border: 'none', padding: '8px 16px', borderRadius: 4, cursor: 'pointer' }}>Cancel</button>
           </div>

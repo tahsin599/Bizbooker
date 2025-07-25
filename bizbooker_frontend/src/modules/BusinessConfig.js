@@ -17,8 +17,8 @@ import {
 import axios from 'axios';
 import './BusinessConfig.css';
 import moment from 'moment';
-import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { useParams } from 'react-router-dom';
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, CreditCardOutlined } from '@ant-design/icons';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const { Option } = Select;
 
@@ -31,8 +31,10 @@ const BusinessConfig = () => {
   const [selectedTemplateDay, setSelectedTemplateDay] = useState(null);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [savedConfig, setSavedConfig] = useState(null);
+  const [stripeAccountStatus, setStripeAccountStatus] = useState(null);
   const token = localStorage.getItem('token');
   const businessId = useParams().businessId; // Assuming you're using react-router v6
+  const navigate = useNavigate();
 
   // Initialize with default hours
   useEffect(() => {
@@ -44,6 +46,7 @@ const BusinessConfig = () => {
     }));
     setWeeklyHours(defaultHours);
     loadExistingConfig();
+    checkStripeAccountStatus();
   }, []);
 
   const authAxios = axios.create({
@@ -66,6 +69,15 @@ const BusinessConfig = () => {
       }
     } catch (error) {
       console.log('No existing configuration found:', error);
+    }
+  };
+
+  const checkStripeAccountStatus = async () => {
+    try {
+      const response = await authAxios.get(`/stripe-connect/account-status/${businessId}`);
+      setStripeAccountStatus(response.data);
+    } catch (error) {
+      console.error('Error checking Stripe account status:', error);
     }
   };
 
@@ -174,6 +186,11 @@ const BusinessConfig = () => {
         {day.openTime} - {day.closeTime}
       </Tag>
     );
+  };
+
+  const handlePaymentSetup = () => {
+    // Navigate to the payment setup page
+    navigate(`/payment-setup/${businessId}`);
   };
 
   return (
@@ -310,6 +327,79 @@ const BusinessConfig = () => {
             </Col>
           </Row>
         </Form>
+      </Card>
+
+      {/* Payment Setup Card */}
+      <Card 
+        title={
+          <span>
+            <CreditCardOutlined style={{ marginRight: 8 }} />
+            Payment Setup
+          </span>
+        } 
+        className="config-card"
+      >
+        {stripeAccountStatus ? (
+          <div className="payment-status">
+            {!stripeAccountStatus.hasStripeAccount ? (
+              <div className="payment-not-setup">
+                <p>Set up payments to receive money from customer bookings directly to your bank account.</p>
+                <Button 
+                  type="primary" 
+                  icon={<CreditCardOutlined />}
+                  onClick={() => navigate(`/stripe-onboarding/${businessId}`)}
+                >
+                  Set Up Payments
+                </Button>
+              </div>
+            ) : (
+              <div className="payment-setup">
+                <div className="status-items">
+                  <div className={`status-item ${stripeAccountStatus.onboardingCompleted ? 'completed' : 'pending'}`}>
+                    <span className="status-icon">
+                      {stripeAccountStatus.onboardingCompleted ? '✅' : '🔄'}
+                    </span>
+                    <span>Account Setup: {stripeAccountStatus.onboardingCompleted ? 'Complete' : 'Pending'}</span>
+                  </div>
+                  
+                  <div className={`status-item ${stripeAccountStatus.chargesEnabled ? 'completed' : 'pending'}`}>
+                    <span className="status-icon">
+                      {stripeAccountStatus.chargesEnabled ? '✅' : '🔄'}
+                    </span>
+                    <span>Receiving Payments: {stripeAccountStatus.chargesEnabled ? 'Enabled' : 'Pending'}</span>
+                  </div>
+                  
+                  <div className={`status-item ${stripeAccountStatus.payoutsEnabled ? 'completed' : 'pending'}`}>
+                    <span className="status-icon">
+                      {stripeAccountStatus.payoutsEnabled ? '✅' : '🔄'}
+                    </span>
+                    <span>Bank Transfers: {stripeAccountStatus.payoutsEnabled ? 'Enabled' : 'Pending'}</span>
+                  </div>
+                </div>
+
+                {stripeAccountStatus.onboardingCompleted && stripeAccountStatus.chargesEnabled ? (
+                  <div className="payment-active">
+                    <Tag color="success" style={{ marginRight: 8 }}>
+                      <CheckCircleOutlined /> Payment Active
+                    </Tag>
+                    <span>You're ready to receive payments!</span>
+                  </div>
+                ) : (
+                  <Button 
+                    type="primary" 
+                    onClick={() => navigate(`/stripe-onboarding/${businessId}`)}
+                  >
+                    Complete Payment Setup
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            Loading payment status...
+          </div>
+        )}
       </Card>
 
       <div className="action-bar">

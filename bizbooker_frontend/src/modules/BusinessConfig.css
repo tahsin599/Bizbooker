@@ -89,3 +89,53 @@
   border-radius: 4px;
   margin-top: 10px;
 }
+
+/* Payment Setup Styles */
+.payment-status {
+  padding: 16px 0;
+}
+
+.payment-not-setup {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.payment-not-setup p {
+  margin-bottom: 16px;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.payment-setup .status-items {
+  margin-bottom: 20px;
+}
+
+.payment-setup .status-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.payment-setup .status-item.completed {
+  color: #52c41a;
+}
+
+.payment-setup .status-item.pending {
+  color: #faad14;
+}
+
+.payment-setup .status-icon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.payment-active {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+}
