@@ -25,7 +25,8 @@ public class StripeConnectController {
     @Autowired
     private BusinessRepository businessRepository;
 
-    @Value("${stripe.secret.key}")
+
+    @Value("${STRIPE_SECRET_KEY}")
     private String stripeSecretKey;
 
     @PostConstruct

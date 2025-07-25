@@ -102,7 +102,8 @@ public class PaymentController {
         }
     }
 
-    @Value("${stripe.secret.key}")
+
+    @Value("${STRIPE_SECRET_KEY}")
     private String stripeSecretKey;
 
     @PostConstruct
