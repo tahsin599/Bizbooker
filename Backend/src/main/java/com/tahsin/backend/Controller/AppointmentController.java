@@ -17,11 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/api/appointments")
 public class AppointmentController {
@@ -441,6 +436,118 @@ public ResponseEntity<?> createPendingAppointment(@RequestBody AppointmentDto ap
             return ResponseEntity.status(404).body(new ErrorResponse("Appointment not found"));
         } catch (Exception e) {
             System.out.println("[EXCEPTION] " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ErrorResponse("Internal Server Error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user/{userId}/bookings")
+    public ResponseEntity<Page<AppointmentResponseDTO>> getUserBookings(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "startTime") String sort,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String search) {
+        
+        try {
+            System.out.println("[BOOKINGS] Fetching bookings for user " + userId + 
+                " - page: " + page + ", size: " + size + ", status: " + status + ", search: " + search);
+            
+            Page<Appointment> appointments = appointmentService.getAppointmentsByUserWithFilters(
+                userId, page, size, sort, direction, status, search);
+            
+            // Convert Page<Appointment> to Page<AppointmentResponseDTO>
+            Page<AppointmentResponseDTO> responseDTOs = appointments.map(appointment -> {
+                AppointmentResponseDTO dto = new AppointmentResponseDTO();
+                dto.setAppointmentId(appointment.getId());
+                dto.setStatus(appointment.getStatus().toString());
+                
+                // Business information
+                if (appointment.getBusiness() != null) {
+                    dto.setBusinessName(appointment.getBusiness().getBusinessName());
+                    dto.setBusinessId(appointment.getBusiness().getId());
+                }
+                
+                // Location information
+                if (appointment.getLocation() != null) {
+                    dto.setLocationName(appointment.getLocation().getArea());
+                    dto.setLocationAddress(appointment.getLocation().getAddress() + ", " + appointment.getLocation().getCity());
+                }
+                
+                // Service information
+                if (appointment.getService() != null) {
+                    dto.setServiceName(appointment.getService().getName());
+                }
+                
+                // Customer information
+                if (appointment.getCustomer() != null) {
+                    dto.setCustomerName(appointment.getCustomer().getName());
+                }
+                
+                // Time and price information
+                dto.setStartTime(appointment.getStartTime());
+                dto.setEndTime(appointment.getEndTime());
+                dto.setSlotPrice(appointment.getSlotPrice());
+                
+                return dto;
+            });
+            
+            System.out.println("[BOOKINGS] Returning " + responseDTOs.getNumberOfElements() + 
+                " bookings out of " + responseDTOs.getTotalElements() + " total");
+            
+            return ResponseEntity.ok(responseDTOs);
+            
+        } catch (Exception e) {
+            System.out.println("[EXCEPTION] Error fetching bookings: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PatchMapping("/{appointmentId}/cancel")
+    public ResponseEntity<?> cancelAppointment(@PathVariable Long appointmentId) {
+        try {
+            System.out.println("[APPOINTMENT] Received cancellation request for ID: " + appointmentId);
+            
+            Appointment cancelledAppointment = appointmentService.cancelAppointment(appointmentId);
+            System.out.println("[APPOINTMENT] Appointment cancelled successfully for ID " + appointmentId);
+            
+            // Return a safe DTO instead of the full entity
+            AppointmentResponseDTO responseDTO = new AppointmentResponseDTO();
+            responseDTO.setAppointmentId(cancelledAppointment.getId());
+            responseDTO.setStatus(cancelledAppointment.getStatus().toString());
+            responseDTO.setLocationName(cancelledAppointment.getLocation() != null ? cancelledAppointment.getLocation().getArea() : null);
+            responseDTO.setBusinessName(cancelledAppointment.getBusiness() != null ? cancelledAppointment.getBusiness().getBusinessName() : null);
+            responseDTO.setStartTime(cancelledAppointment.getStartTime());
+            responseDTO.setEndTime(cancelledAppointment.getEndTime());
+            responseDTO.setSlotPrice(cancelledAppointment.getSlotPrice());
+            if (cancelledAppointment.getCustomer() != null) {
+                responseDTO.setCustomerName(cancelledAppointment.getCustomer().getName());
+            }
+            
+            System.out.println("[APPOINTMENT] Returning response DTO with status: " + responseDTO.getStatus());
+            return ResponseEntity.ok(responseDTO);
+        } catch (RuntimeException e) {
+            System.out.println("[ERROR] Appointment not found for ID: " + appointmentId);
+            return ResponseEntity.status(404).body(new ErrorResponse("Appointment not found"));
+        } catch (Exception e) {
+            System.out.println("[EXCEPTION] Error cancelling appointment: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new ErrorResponse("Internal Server Error: " + e.getMessage()));
+        }
+    }
+    
+    // Cleanup endpoint to delete all cancelled appointments
+    @DeleteMapping("/cleanup-cancelled")
+    public ResponseEntity<?> cleanupCancelledAppointments() {
+        try {
+            System.out.println("[APPOINTMENT] Starting cleanup of cancelled appointments");
+            appointmentService.deleteAllCancelledAppointments();
+            return ResponseEntity.ok(Map.of("message", "All cancelled appointments have been deleted successfully"));
+        } catch (Exception e) {
+            System.out.println("[EXCEPTION] Error during cleanup: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body(new ErrorResponse("Internal Server Error: " + e.getMessage()));
         }

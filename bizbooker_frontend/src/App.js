@@ -22,6 +22,7 @@ import NoBusinessesFound from './modules/NoBusinessesFound';
 import BusinessConfig from './modules/BusinessConfig';
 import BookingsPage from './modules/BookingsPage'; // Import the BookingsPage component
 import PaymentSuccess from './modules/PaymentSuccess';
+import BookingPaymentSuccess from './modules/BookingPaymentSuccess';
 import StripeConnectDashboard from './modules/StripeConnectDashboard';
 import StripeOnboardingComplete from './modules/StripeOnboardingComplete';
 import StripeOnboarding from './modules/StripeOnboarding';
@@ -48,8 +49,9 @@ function App() {
           <Route path="/business/category/:categoryId" element={<><Navbar /><CategoryBusinessListingPage /><Footer /></>} />
           <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
           <Route path="/business/config/:businessId" element={<><BusinessConfig /></>} /> 
-          <Route path="/bookings" element={<><BookingsPage/></>}/>
+          <Route path="/bookings" element={<><Navbar isAuthenticated={true} /><BookingsPage /><Footer/></>} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/booking-payment-success" element={<BookingPaymentSuccess />} />
           <Route path="/stripe-connect-dashboard/:businessId" element={<StripeConnectDashboard />} />
           <Route path="/stripe-onboarding/:businessId" element={<StripeOnboarding />} />
           <Route path="/stripe-onboarding-complete/:businessId" element={<StripeOnboardingComplete />} />

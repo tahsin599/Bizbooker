@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.tahsin.backend.Model.Appointment;
 import com.tahsin.backend.Model.Business;
+import com.tahsin.backend.Model.AppointmentStatus;
 import com.tahsin.backend.Model.BusinessLocation;
 import com.tahsin.backend.Model.User;
 
@@ -88,5 +89,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
            "a.endTime < :currentTime")
     List<Appointment> findAppointmentsToComplete(@Param("currentTime") LocalDateTime currentTime);
 
-      Page<Appointment> findByCustomerIdOrderByStartTimeDesc(Long customerId, Pageable pageable);
+    @Query("SELECT a FROM Appointment a WHERE a.customer.id = :customerId ORDER BY a.startTime DESC")
+    Page<Appointment> findByCustomerIdOrderByStartTimeDesc(@Param("customerId") Long customerId, Pageable pageable);
+    
+    // Find appointments by status
+    List<Appointment> findByStatus(AppointmentStatus status);
 }

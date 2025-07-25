@@ -11,6 +11,13 @@ public class PaymentService {
     private PaymentRepository paymentRepository;
 
     public Payment save(Payment payment) {
+        // Check if payment already exists for this appointment
+        Payment existingPayment = paymentRepository.findByAppointmentId(payment.getAppointment().getId()).orElse(null);
+        if (existingPayment != null) {
+            System.out.println("[PAYMENT SERVICE] Payment already exists for appointment " + payment.getAppointment().getId() + ", returning existing payment");
+            return existingPayment;
+        }
+        
         return paymentRepository.save(payment);
     }
 

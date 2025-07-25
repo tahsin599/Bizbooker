@@ -7,9 +7,9 @@ import ScheduleList from './List';
 import { 
   Calendar, Users, Home, MessageSquare, CreditCard, 
   Settings, Plus, FileText, User, Shield, Search, ArrowRight,
-  Briefcase, Dumbbell, HeartPulse, Utensils, GraduationCap, ArrowLeft
+  Briefcase, Dumbbell, HeartPulse, Utensils, GraduationCap, ArrowLeft,
+  CheckCircle, CheckCircle2, XCircle, X, Clock, MapPin
 } from 'lucide-react';
-import { Modal } from 'antd';
 
 const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -399,52 +399,145 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Appointment Details Modal */}
-      <Modal
-        title="Appointment Details"
-        open={showAppointmentModal}
-        onOk={() => setShowAppointmentModal(false)}
-        onCancel={() => setShowAppointmentModal(false)}
-        footer={[
-          <button 
-            key="ok" 
-            className="modal-ok-btn"
-            onClick={() => setShowAppointmentModal(false)}
-          >
-            OK
-          </button>
-        ]}
-      >
-        {selectedAppointment && (
-          <div className="booking-summary">
-            <h3>{selectedAppointment.appointmentTitle || 'Appointment Details'}</h3>
-            <div className="summary-detail">
-              <strong>Business:</strong> {selectedAppointment.businessName || 'N/A'}
+      {/* Enhanced Appointment Details Modal */}
+      {showAppointmentModal && (
+        <div className="modal-overlay" onClick={() => setShowAppointmentModal(false)}>
+          <div className="appointment-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-content">
+                <div className="modal-header-icon">
+                  <Calendar size={28} />
+                </div>
+                <div className="modal-header-text">
+                  <h3>Appointment Details</h3>
+                  <p>Review your appointment information</p>
+                </div>
+              </div>
+              <button 
+                className="modal-close-btn"
+                onClick={() => setShowAppointmentModal(false)}
+              >
+                ×
+              </button>
             </div>
-            <div className="summary-detail">
-              <strong>Service:</strong> {selectedAppointment.serviceName || 'N/A'}
-            </div>
-            <div className="summary-detail">
-              <strong>Location:</strong> {selectedAppointment.locationAddress || 'N/A'}
-            </div>
-            <div className="summary-detail">
-              <strong>Date:</strong> {selectedAppointment.formattedFullDate || 'N/A'}
-            </div>
-            <div className="summary-detail">
-              <strong>Time:</strong> {selectedAppointment.formattedTime || 'N/A'}
-            </div>
-            <div className="summary-detail">
-              <strong>Status:</strong> 
-              <span className={`status-badge ${(selectedAppointment.status || 'pending').toLowerCase()}`}>
-                {selectedAppointment.status || 'Pending'}
-              </span>
-            </div>
-            <div className="summary-detail">
-              <strong>Reference ID:</strong> {selectedAppointment.id || 'N/A'}
-            </div>
+            
+            {selectedAppointment && (
+              <div className="appointment-details">
+                {/* Status Banner */}
+                <div className="appointment-status-banner">
+                  <div className="status-banner-content">
+                    <div className="status-indicator">
+                      {(selectedAppointment.status || 'pending').toLowerCase() === 'confirmed' && <CheckCircle size={20} />}
+                      {(selectedAppointment.status || 'pending').toLowerCase() === 'pending' && <Clock size={20} />}
+                      {(selectedAppointment.status || 'pending').toLowerCase() === 'cancelled' && <XCircle size={20} />}
+                      {(selectedAppointment.status || 'pending').toLowerCase() === 'completed' && <CheckCircle2 size={20} />}
+                    </div>
+                    <div className="status-info">
+                      <span className="status-text">Status</span>
+                      <span className={`status-badge-large ${(selectedAppointment.status || 'pending').toLowerCase()}`}>
+                        {selectedAppointment.status || 'Pending'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Business Info */}
+                <div className="appointment-business-card">
+                  <div className="business-card-icon">
+                    <Briefcase size={24} />
+                  </div>
+                  <div className="business-card-info">
+                    <h4>{selectedAppointment.businessName || 'Appointment'}</h4>
+                    <p>{selectedAppointment.serviceName || 'Service Name'}</p>
+                  </div>
+                  <div className="price-tag">
+                    <span className="price-label">Total</span>
+                    <span className="price-value">${selectedAppointment.slotPrice || '0.00'}</span>
+                  </div>
+                </div>
+                
+                {/* Enhanced Info Grid */}
+                <div className="appointment-info-grid-enhanced">
+                  <div className="info-group">
+                    <h5 className="info-group-title">
+                      <Calendar size={18} />
+                      Date & Time
+                    </h5>
+                    <div className="info-cards">
+                      <div className="info-card primary">
+                        <div className="info-card-icon">
+                          <Calendar size={16} />
+                        </div>
+                        <div className="info-card-content">
+                          <span className="info-card-label">Date</span>
+                          <span className="info-card-value">{selectedAppointment.formattedFullDate || 'N/A'}</span>
+                        </div>
+                      </div>
+                      <div className="info-card primary">
+                        <div className="info-card-icon">
+                          <Clock size={16} />
+                        </div>
+                        <div className="info-card-content">
+                          <span className="info-card-label">Time</span>
+                          <span className="info-card-value">{selectedAppointment.formattedTime || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="info-group">
+                    <h5 className="info-group-title">
+                      <MapPin size={18} />
+                      Location & Contact
+                    </h5>
+                    <div className="info-cards">
+                      <div className="info-card secondary">
+                        <div className="info-card-icon">
+                          <MapPin size={16} />
+                        </div>
+                        <div className="info-card-content">
+                          <span className="info-card-label">Location</span>
+                          <span className="info-card-value">{selectedAppointment.locationAddress || 'N/A'}</span>
+                        </div>
+                      </div>
+                      <div className="info-card secondary">
+                        <div className="info-card-icon">
+                          <FileText size={16} />
+                        </div>
+                        <div className="info-card-content">
+                          <span className="info-card-label">Reference ID</span>
+                          <span className="info-card-value">#{selectedAppointment.appointmentId || selectedAppointment.id || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="modal-actions-enhanced">
+                  <button 
+                    className="modal-action-btn primary-enhanced"
+                    onClick={() => {
+                      setShowAppointmentModal(false);
+                      navigate('/bookings');
+                    }}
+                  >
+                    <ArrowRight size={16} />
+                    View All Bookings
+                  </button>
+                  <button 
+                    className="modal-action-btn secondary-enhanced"
+                    onClick={() => setShowAppointmentModal(false)}
+                  >
+                    <X size={16} />
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </Modal>
+        </div>
+      )}
     </div>
   );
 };

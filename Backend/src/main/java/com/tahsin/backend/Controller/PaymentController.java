@@ -9,13 +9,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import com.tahsin.backend.Model.Appointment;
 import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.Payment;
+import com.tahsin.backend.Model.PaymentStatus;
+import com.tahsin.backend.Model.AppointmentStatus;
 import com.tahsin.backend.Repository.BusinessRepository;
+import com.tahsin.backend.Repository.PaymentRepository;
 
 import javax.annotation.PostConstruct;
 
@@ -28,6 +32,8 @@ public class PaymentController {
     private com.tahsin.backend.Repository.AppointmentRepository appointmentRepository;
     @Autowired
     private BusinessRepository businessRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody com.tahsin.backend.dto.PaymentDto dto) {
@@ -51,16 +57,36 @@ public class PaymentController {
             
             // Use synchronized method to prevent duplicate payments
             Payment saved = paymentService.save(payment);
-            System.out.println("[PAYMENT] Payment created/found: " + saved);
-            return ResponseEntity.ok(saved);
+            System.out.println("[PAYMENT] Payment created/found: " + saved.getId());
+            
+            // Create simple response to avoid circular references
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", saved.getId());
+            response.put("appointmentId", saved.getAppointment().getId());
+            response.put("amount", saved.getAmount());
+            response.put("status", saved.getStatus().toString());
+            response.put("transactionId", saved.getTransactionId());
+            response.put("message", "Payment created successfully");
+            
+            return ResponseEntity.ok(response);
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
             // Handle duplicate appointment_id constraint violation
             System.out.println("[PAYMENT] Duplicate payment detected for appointment " + dto.appointmentId + ", fetching existing payment");
             try {
                 Payment existingPayment = paymentService.getByAppointmentId(dto.appointmentId);
                 if (existingPayment != null) {
-                    System.out.println("[PAYMENT] Returning existing payment: " + existingPayment);
-                    return ResponseEntity.ok(existingPayment);
+                    System.out.println("[PAYMENT] Returning existing payment: " + existingPayment.getId());
+                    
+                    // Create simple response to avoid circular references
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("id", existingPayment.getId());
+                    response.put("appointmentId", existingPayment.getAppointment().getId());
+                    response.put("amount", existingPayment.getAmount());
+                    response.put("status", existingPayment.getStatus().toString());
+                    response.put("transactionId", existingPayment.getTransactionId());
+                    response.put("message", "Payment already exists");
+                    
+                    return ResponseEntity.ok(response);
                 } else {
                     System.out.println("[PAYMENT] Could not find existing payment after constraint violation");
                     return ResponseEntity.status(500).body("Payment creation failed due to constraint violation but could not find existing payment");
@@ -179,6 +205,42 @@ public class PaymentController {
     @PostMapping("/create-checkout-session")
     public Map<String, String> createCheckoutSession(@RequestBody Map<String, Object> data) {
         try {
+            // Handle appointmentId first if provided
+            Long appointmentId = null;
+            Object appointmentIdObj = data.get("appointmentId");
+            if (appointmentIdObj != null) {
+                if (appointmentIdObj instanceof String) {
+                    appointmentId = Long.parseLong((String) appointmentIdObj);
+                } else if (appointmentIdObj instanceof Number) {
+                    appointmentId = ((Number) appointmentIdObj).longValue();
+                }
+            }
+            
+            // If appointmentId is provided, check if it already has a payment
+            if (appointmentId != null) {
+                Optional<Payment> existingPayment = paymentRepository.findByAppointmentId(appointmentId);
+                if (existingPayment.isPresent()) {
+                    Payment payment = existingPayment.get();
+                    System.out.println("[CHECKOUT] Payment already exists for appointment " + appointmentId + 
+                                     ", status: " + payment.getStatus());
+                    
+                    if ("COMPLETED".equals(payment.getStatus().toString())) {
+                        // Payment already completed, just update appointment status to APPROVED
+                        Appointment appointment = appointmentRepository.findById(appointmentId).orElse(null);
+                        if (appointment != null) {
+                            appointment.setStatus(AppointmentStatus.APPROVED);
+                            appointmentRepository.save(appointment);
+                            System.out.println("[CHECKOUT] Appointment " + appointmentId + " status updated to APPROVED");
+                        }
+                        
+                        Map<String, String> response = new HashMap<>();
+                        response.put("alreadyPaid", "true");
+                        response.put("message", "Payment already completed, appointment confirmed");
+                        return response;
+                    }
+                }
+            }
+            
             // Handle price with proper type checking
             Object priceObj = data.get("price");
             Long price;
@@ -212,8 +274,64 @@ public class PaymentController {
                 }
             }
             
-            String successUrl = "http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}"; // Stripe will replace {CHECKOUT_SESSION_ID}
-            String cancelUrl = "http://localhost:3000/payment-cancel";   // Change to your frontend cancel URL
+            // If appointmentId is provided, check if it already has a payment
+            if (appointmentId != null) {
+                Optional<Payment> existingPayment = paymentRepository.findByAppointmentId(appointmentId);
+                if (existingPayment.isPresent()) {
+                    Payment payment = existingPayment.get();
+                    System.out.println("[CHECKOUT] Payment already exists for appointment " + appointmentId + 
+                                     ", status: " + payment.getStatus());
+                    
+                    if ("COMPLETED".equals(payment.getStatus().toString())) {
+                        // Payment already completed, just update appointment status to APPROVED
+                        Appointment appointment = appointmentRepository.findById(appointmentId).orElse(null);
+                        if (appointment != null) {
+                            appointment.setStatus(AppointmentStatus.APPROVED);
+                            appointmentRepository.save(appointment);
+                            System.out.println("[CHECKOUT] Appointment " + appointmentId + " status updated to APPROVED");
+                        }
+                        
+                        Map<String, String> response = new HashMap<>();
+                        response.put("alreadyPaid", "true");
+                        response.put("message", "Payment already completed, appointment confirmed");
+                        return response;
+                    } else {
+                        // Payment exists but not completed - update it to completed and approve appointment
+                        System.out.println("[CHECKOUT] Updating existing payment to COMPLETED for appointment " + appointmentId);
+                        payment.setStatus(PaymentStatus.COMPLETED);
+                        paymentRepository.save(payment);
+                        
+                        // Update appointment status to APPROVED
+                        Appointment appointment = appointmentRepository.findById(appointmentId).orElse(null);
+                        if (appointment != null) {
+                            appointment.setStatus(AppointmentStatus.APPROVED);
+                            appointmentRepository.save(appointment);
+                            System.out.println("[CHECKOUT] Appointment " + appointmentId + " status updated to APPROVED");
+                        }
+                        
+                        Map<String, String> response = new HashMap<>();
+                        response.put("alreadyPaid", "true");
+                        response.put("message", "Payment completed, appointment confirmed");
+                        return response;
+                    }
+                }
+            }
+            
+            // Handle custom success and cancel URLs
+            String successUrl = (String) data.get("successUrl");
+            String cancelUrl = (String) data.get("cancelUrl");
+            
+            // Default URLs if not provided
+            if (successUrl == null || successUrl.isEmpty()) {
+                successUrl = "http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}";
+            } else {
+                // Add session_id parameter to custom success URL
+                successUrl += (successUrl.contains("?") ? "&" : "?") + "session_id={CHECKOUT_SESSION_ID}";
+            }
+            
+            if (cancelUrl == null || cancelUrl.isEmpty()) {
+                cancelUrl = "http://localhost:3000/payment-cancel";
+            }
 
             SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)

@@ -12,6 +12,8 @@ public class AppointmentResponseDTO {
     private String serviceName;     // Often needed
     private String customerName;    // Useful for business views
     private Double slotPrice;       // Price of the booked slot
+    private Long businessId;        // Business ID for navigation
+    private String locationAddress; // Full address for display
 
     // Constructors
     public AppointmentResponseDTO() {
@@ -97,5 +99,21 @@ public class AppointmentResponseDTO {
 
     public void setSlotPrice(Double slotPrice) {
         this.slotPrice = slotPrice;
+    }
+
+    public Long getBusinessId() {
+        return businessId;
+    }
+
+    public void setBusinessId(Long businessId) {
+        this.businessId = businessId;
+    }
+
+    public String getLocationAddress() {
+        return locationAddress;
+    }
+
+    public void setLocationAddress(String locationAddress) {
+        this.locationAddress = locationAddress;
     }
 }

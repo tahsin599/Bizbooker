@@ -213,16 +213,19 @@ const PaymentSuccess = () => {
         if (!paymentResponse.ok) {
           const errorText = await paymentResponse.text();
           
-          // Check if it's a duplicate entry error
-          if (errorText.includes("Duplicate entry") || errorText.includes("UK2kxb37oip0md9ggekjbjmana4")) {
+          // Check if it's a duplicate entry error or conflict
+          if (errorText.includes("Duplicate entry") || 
+              errorText.includes("UK2kxb37oip0md9ggekjbjmana4") || 
+              paymentResponse.status === 409) {
             console.log("Payment record already exists - this is fine, continuing...");
             // Payment already exists, that's OK - the appointment status was already updated
           } else {
-            throw new Error(`Failed to create payment record: ${errorText}`);
+            console.warn("Payment creation failed but continuing:", errorText);
+            // Don't throw error here - the appointment status was already updated successfully
           }
         } else {
           const createdPayment = await paymentResponse.json();
-          console.log("Payment record created:", createdPayment);
+          console.log("Payment record created/updated successfully:", createdPayment);
         }
         } else {
           console.log("Payment record already exists, skipping creation");

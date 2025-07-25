@@ -1,10 +1,167 @@
+/* CSS Reset and Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #ffffff;
+  color: #1e1e2f;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Ensure all containers take full width */
+.App {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Typography Reset */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: inherit;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0;
+}
+
+/* List Reset */
+ul, ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Link Reset */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Button Reset */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Input Reset */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  outline: none;
+}
+
+/* Image Reset */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Table Reset */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Fix for some components that might not fill width */
+.dashboard-container,
+.business-listing-container,
+.business-service-container,
+.bookings-page,
+.landing-page {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Global Layout Fixes */
+
+/* Ensure all main page containers take full width */
+.business-service-container,
+.bookings-page,
+.user-businesses-container,
+.stripe-dashboard,
+.business-detail-container {
+  width: 100% !important;
+  min-height: 100vh;
+  margin: 0;
+  padding-top: 72px; /* Account for navbar */
+}
+
+/* Ensure content areas don't restrict width unnecessarily */
+.service-content,
+.bookings-container,
+.business-details-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Fix for grid layouts */
+.businesses-grid,
+.services-grid,
+.bookings-grid {
+  width: 100%;
+}
+
+/* Responsive container fixes */
+@media (max-width: 768px) {
+  .dashboard-content,
+  .service-content,
+  .bookings-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .businesses-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Prevent horizontal scrolling */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Box sizing fix for all elements */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 code {
