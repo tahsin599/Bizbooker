@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tahsin.backend.Model.AIConversation;
 import com.tahsin.backend.Model.AIMessage;
 import com.tahsin.backend.Model.Appointment;
+import com.tahsin.backend.Model.ApprovalStatus;
 import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.BusinessHours;
 import com.tahsin.backend.Model.BusinessLocation;
@@ -19,13 +20,17 @@ import com.tahsin.backend.Repository.ServiceCategoryRepository;
 import com.tahsin.backend.Repository.SlotIntervalRepository;
 import com.tahsin.backend.Service.AIConversationService;
 import com.tahsin.backend.Service.AIMessageService;
+import com.tahsin.backend.Service.ReviewService;
 
 import org.aspectj.weaver.patterns.ConcreteCflowPointcut.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
@@ -36,6 +41,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @RestController
@@ -60,7 +66,9 @@ public class GeminiModelController {
     private BusinessLocationRepository businessLocationRepository;
     @Autowired
     private BusinessHoursRepository businessHoursRepository;
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    @Autowired
+    private ReviewService reviewService;
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     public GeminiModelController(RestClient restClient,
             AIMessageService messageService,
@@ -71,8 +79,9 @@ public class GeminiModelController {
         this.conversationService = conversationService;
         this.businessRepository = businessRepository;
         this.slotIntervalRepository = slotIntervalRepository;
-        
+
     }
+
     public static int mapDayOfWeekToNumber(DayOfWeek dayOfWeek) {
         // Java's DayOfWeek enum starts with Monday=1, so we adjust
         return (dayOfWeek.getValue() % 7); // Sunday=0, Monday=1, ..., Saturday=6
@@ -99,88 +108,176 @@ public class GeminiModelController {
 
             // Enhanced instruction prompt
             String instructionPrompt = """
-                    HEY AI! LISTEN CAREFULLY! THIS IS HOW YOU MUST RESPOND:
+                        HEY AI! LISTEN VERY CAREFULLY! YOU MUST FOLLOW THESE RULES PRECISELY
 
-                    👶 BABY RULES:
-                    1. ONLY use the EXACT formats below
-                    2. NEVER add extra words or explanations
-                    3. Use "na" when something is missing
-                    4. For dates:
-                     - If user specifies a date (like "next Sunday"), calculate the ACTUAL date in format: yyyy-MM-ddTHH:mm:ss
-                    - CURRENT DATE: %s - use this as reference
-                    - Never use example dates like 2023-12-25
-                    EXAMPLE:
-                     If today is 2025-07-23 and user says "Book next Sunday at 2pm":
-                     YOU MUST calculate next Sunday is 2025-07-27 and respond:
-                     "(Grand Hotel:Beachside:2:2025-07-27T14:00:00):BookingBusiness"
-                    5. Remember the last 5 messages to understand!
+                        🔹 CORE PRINCIPLES:
+                        1. RESPONSE FORMATTING:
+                           - ONLY use the EXACT specified formats below
+                           - NEVER add extra words, explanations or commentary
+                           - ALWAYS maintain the pattern: "(data1:data2:data3):ResponseType"
+                           - Use "na" for any missing information fields
 
-                    🧩 RESPONSE PUZZLE PIECES:
+                        2. DATE HANDLING:
+                           - CURRENT REFERENCE DATE: %s (use for all calculations)
+                           - Convert relative dates to absolute format (yyyy-MM-ddTHH:mm:ss)
+                             - "next Monday" → calculate actual date
+                             - "tomorrow" → current date + 1 day
+                             - "in 3 days" → current date + 3 days
+                           - NEVER use example dates (like 2023-12-25) - ALWAYS calculate real dates
+                           - REJECT dates in the past with "(na):PastDateError"
 
-                    A. When they ask about types of businesses:
-                       "(restaurants):categoryRequest"
+                        3. CONTEXT AWARENESS:
+                           - Remember these from the last 5 messages:
+                             - Last mentioned business name
+                             - Last mentioned location/area
+                             - Last mentioned date/time
+                           - For pronouns ("it", "there"), substitute with last context
+                           - If previous AI reply was unhelpful ("(na):(na)"), ignore that context
 
-                    B. When creating a business:
-                       - ALL info: "(downtown,Springfield,123 Main St,Bob's Burgers):BusinessCreationRequest"
-                       - if user wants to know how to add or create their business on this website then reposnd with "(na:na:na:na):BusinessCreationRequest"
-                       - Missing info: "(downtown:na:123 Main St:Bob's Burgers):BusinessCreationRequest"
+                        4. ERROR HANDLING:
+                           - If completely stuck, use "(na):(na)" but ONLY as last resort
+                           - For ambiguous requests, make your best guess using context
+                           - When rejecting, provide reason in the ResponseType (see below)
 
-                    C. When searching business types:
-                       - With area: "(downtown:restaurant):searchCategory".'Healthcare','Beauty & Wellness','Restaurant & Food','Education','Fitness','Professional Services','Automotive','Home Services','Event Planning','Technology'. These are the categories in my system. analyze the user requirements and pick the category that fits best.
-                       - Need location: "(userIdNeeded):searchCategory"
+                        📜 RESPONSE PROTOCOLS (MUST FOLLOW EXACTLY):
 
-                    D. When searching business names:
-                       "(Bob's Burgers):searchBusiness"
+                        A. BUSINESS TYPE INQUIRIES (categoryRequest)
+                           "(category_name):categoryRequest"
+                           - Categories: Healthcare, Beauty & Wellness, Restaurant & Food, Education,
+                             Fitness, Professional Services, Automotive, Home Services, Event Planning, Technology
+                           - Map user terms to these exact categories:
+                             - "doctor" → "Healthcare"
+                             - "salon" → "Beauty & Wellness"
+                             - "gym" → "Fitness"
+                             - etc.
 
-                    E. When booking:
-                       - By type: "(hotels):BookingCategory"
-                       - Specific business: "(Grand Hotel:Beachside:2:2023-12-25T14:00:00):BookingBusiness"
-                       - Missing info: "(na:Beachside:na:2023-12-25T14:00:00):BookingBusiness"
+                        B. BUSINESS CREATION (BusinessCreationRequest)
+                           - Complete: "(area,city,address,business_name):BusinessCreationRequest"
+                           - How-to guide: "(na:na:na:na):BusinessCreationRequest"
+                           - Partial: "(area:na:address:business_name):BusinessCreationRequest"
+                           Edge Cases:
+                           - If user says "how do I list my business?" → use how-to format
+                           - If missing critical info (like name) → use partial format
+
+                        C. BUSINESS SEARCH BY TYPE (searchCategory)
+                           - With area: "(area:category):searchCategory"
+                           - No area: "(userIdNeeded):searchCategory"
+                           Edge Cases:
+                           - "Find restaurants" → "(na:Restaurant & Food):searchCategory"
+                           - "Healthcare downtown" → "(downtown:Healthcare):searchCategory"
+
+                        D. BUSINESS NAME SEARCH (searchBusiness).Also if the previous question was about the rating and now the user wants to know more:
+                           "(exact_business_name):searchBusiness"
+                           - Always use exact name match
+                           - If similar names exist: pick most recent in context
+
+                        E. BOOKING REQUESTS (BookingBusiness)
+                           - Complete: "(business_name:area:slots:datetime):BookingBusiness"
+                           - Partial: "(na:area:na:datetime):BookingBusiness"
+                           Edge Cases:
+                           - "Book 2 at Beachside tomorrow 2pm" → use last business name if available
+                           - Past dates → "(na):PastDateError"
+                           - Invalid slot count → "(na):InvalidSlotCount"
+
+                        F. AVAILABILITY CHECK (CheckSlot)
+                           - Complete: "(area,business_name,datetime):CheckSlot"
+                           - Partial: "(area:na:datetime):CheckSlot"
+                           Special Cases:
+                           - "Any openings at Grand Hotel?" → use last known area/date if missing
+                           - "How many slots Friday?" → calculate coming Friday's date
+
+                        G. LOCATION INQUIRIES (locationCheck)
+                           "(business_name):locationCheck"
+                           - If name unknown: "(na):locationCheck"
+                           - Respond with ALL locations if multiple exist
+
+                        H. BUSINESS HOURS (CheckHours)
+                           "(business_name):CheckHours"
+                           Context Rules:
+                           - If name omitted, check last 3 messages for business references
+                           - "When does it close?" → use last mentioned business
+
+                        I. SERVICE AREA CHECK (LocationServiceCheck) - NEW
+                           "(service_type):LocationServiceCheck"
+                           Trigger Condition:
+                           - Only when previous AI reply indicated no services in area
+                           - Extract service type from current/previous prompts
+
+                        J. RATING CHECK REQUESTS (CheckRating):
+                           "(business_name):CheckRating"
+
+                           Trigger Patterns:
+                           - "What is the rating of _"
+                           - "Tell me the rating for _"
+                           - "How good is _"
+                           - "Is _ well rated"
+                           - "What do people think about _"
+
+                        K. ERROR CASES:
+                           - Past dates: "(na):PastDateError"
+                           - Invalid slots: "(na):InvalidSlotCount"
+                           - Missing critical info: "(na):IncompleteRequest"
+                        L.if the user wants to know highest rated businesses of certain type in a certain area:
+                           -(areaName:category):RatingCheckHighest
 
 
+                        📜 CONTEXT PROCESSING RULES:
+                        1. HISTORY ANALYSIS:
+                           - Scan last 5 messages for missing pieces
+                           - Ignore any "(na):(na)" responses in history
+                           - Prioritize most recent relevant information
 
-                    G. When checking available times:
-                       - Complete: "(downtown,Grand Hotel,2023-12-25T14:00:00):CheckSlot"
-                       - Missing: "(downtown:na:2023-12-25T14:00:00):CheckSlot"
+                        2. VAGUE REQUEST HANDLING:
+                           - "it" = last mentioned business
+                           - "there" = last mentioned area
+                           - "then" = last mentioned datetime
 
-                    H. When checking locations:
-                       "(Grand Hotel):locationCheck"
-                       - Missing name: "(na):locationCheck"
-                    I.if the question is about how the system works or how to use it:
-                       "(na):Inquiry"
+                        3. CONFLICT RESOLUTION:
+                           - When current prompt contradicts history, believe the prompt
+                           - For ambiguous dates/times, assume soonest valid future slot
 
-                    J. If the question is about how to book an appointment:
-                          "(na):BookingInquiry"
+                        EXAMPLE SCENARIOS:
 
-                    I. For other questions:
-                       "(na):(na)"
+                        1. User: "Find me a gym in midtown"
+                           AI: "(midtown:Fitness):searchCategory"
 
-                    📜 HISTORY (oldest first):
-                    %s
+                        2. User: "How about massages?"
+                           AI: "(midtown:Beauty & Wellness):searchCategory"
 
-                    ❓ CURRENT QUESTION:
-                    %s
+                        3. User: "Book 3 slots tomorrow at 3pm"
+                           (Assuming last business was "Zen Spa")
+                           AI: "(Zen Spa:na:3:2025-07-28T15:00:00):BookingBusiness"
 
-                    🤖 YOUR JOB:
-                    1. Look at the history to understand.check the history if the missin values are avaiable in the history relate to it with the current question and response based on that.
-                    2. Pick the RIGHT puzzle piece (A-I)
-                    3. Fill in the blanks with the info
-                    4. ONLY respond with the EXACT format!
-                    5. Use "na" for missing parts!
+                        4. User: "Is it open Sundays?"
+                           AI: "(Zen Spa):CheckHours"
 
-                    EXAMPLE:
-                    If someone says "Book 2 slots at Grand Hotel Beachside on Christmas at 2pm" after talking about hotels:
-                    YOU SAY: "(Grand Hotel:Beachside:2:2023-12-25T14:00:00):BookingBusiness"
-                    THAT'S IT! NO EXTRA WORDS!
+                        5. User: "No I meant Relaxation Center"
+                           AI: "(Relaxation Center):CheckHours"
+
+                        📜 HISTORY (oldest first):
+                        %s
+
+                        ❓ CURRENT QUESTION:
+                        %s
+
+                        YOUR ACTION PLAN:
+                        1. ANALYZE question and history
+                        2. IDENTIFY missing pieces from context
+                        3. SELECT the correct response protocol
+                        4. FORMAT response exactly as specified
+                        5. VALIDATE against edge cases
+                        6. RESPOND with only the formatted string
                     """
                     .formatted(LocalDateTime.now().toString(), conversationHistory, userPrompt);
 
             // Create Gemini request
+            System.out.println("checking");
             Map<String, Object> requestBody = createGeminiRequest(instructionPrompt);
+            System.out.println("Request Body: " + requestBody);
 
             // Call Gemini API
             String response = callGeminiAPI(requestBody);
-
+            System.out.println(response);
             // Process the response with conversation context
             String processedResponse = processResponse(response, conversationId);
 
@@ -240,35 +337,309 @@ public class GeminiModelController {
             // Route to appropriate handler based on response type
             return switch (responseType) {
                 case "categoryRequest" -> handleCategoryRequest(parameters);
-                case "BusinessCreationRequest" -> handleBusinessCreationRequest(parameters,conversationId);
+                case "BusinessCreationRequest" -> handleBusinessCreationRequest(parameters, conversationId);
                 case "searchCategory" -> handleSearchCategory(parameters);
                 case "searchBusiness" -> handleSearchBusiness(parameters, conversationId);
                 case "BookingCategory" -> handleBookingCategory(parameters);
-                case "BookingBusiness" -> handleBookingBusiness(parameters,conversationId);
+                case "BookingBusiness" -> handleBookingBusiness(parameters, conversationId);
                 case "checkCategory" -> handleCheckCategory(parameters);
                 case "CheckSlot" -> handleCheckSlot(parameters);
                 case "locationCheck" -> handleLocationCheck(parameters);
                 case "Inquiry" -> handleEnquiry(conversationId);
                 case "BookingInquiry" -> handleBookingEnquiry();
-                default -> "(na):(na)";
+                case "Greeting" -> handleGreeting();
+                case "CheckHours" -> handleHours(parameters, conversationId);
+                case "LocationServiceCheck" -> handleLocationServiceCheck(parameters);
+                case "CheckRating" -> handleRatingCheck(parameters);
+                case "RatingCheckHighest" -> handleRatingCheckHighest(parameters);
+                case "Gratitude" ->
+                    "You're welcome! If you have any more questions or need more assistance, feel free to ask!I can always help you with your business related queries and bookings.";
+                default -> handleGreeting();
             };
         } catch (Exception e) {
             log.error("Error processing response", e);
-            return "(na):(na)";
+            return "Sorry I need some context to fulfill you request.";
         }
     }
 
+    private String handleRatingCheckHighest(String parameters) {
+        // Parse parameters
+        String[] parts = parameters.split(":");
+        if (parts.length < 2) {
+            return "Sorry. I don't have enough information to process your request.";
+        }
+
+        String area = parts[0];
+        String category = parts[1];
+
+        // Validate inputs
+        if (area == null || area.isBlank()) {
+            return "Please provide an area to search for businesses.";
+        }
+
+        if (category == null || category.isBlank()) {
+            return "Please specify what type of service you're looking for.";
+        }
+
+        // Find service category
+        ServiceCategory sc = serviceCategoryRepository.findByNameIgnoreCase(category).orElse(null);
+        if (sc == null) {
+            return "Sorry, no businesses in the " + category
+                    + " category are registered in our system. Please try another category.";
+        }
+
+        // Find businesses in area and category
+        List<Business> businesses = businessRepository
+                .findByServiceCategoryIdAndLocationsArea(sc.getId(), area, Pageable.unpaged())
+                .getContent();
+
+        if (businesses.isEmpty()) {
+            return "Sorry, no " + category + " businesses were found in " + area
+                    + ". Would you like to try a different area?";
+        }
+
+        // Create list of businesses with their ratings
+        List<BusinessRating> businessRatings = new ArrayList<>();
+        for (Business business : businesses) {
+            Double rating = reviewService.getAverageRatingByBusiness(business.getId());
+            businessRatings.add(new BusinessRating(
+                    business.getBusinessName(),
+                    rating != null ? rating : 0.0,
+                    business.getLocations().stream()
+                            .filter(l -> area.equalsIgnoreCase(l.getArea()))
+                            .findFirst()
+                            .map(BusinessLocation::getAddress)
+                            .orElse("Address not available")));
+        }
+
+        // Sort by rating (highest first)
+        businessRatings.sort((a, b) -> Double.compare(b.rating, a.rating));
+
+        // Determine how many to show (max 5)
+        int businessesToShow = Math.min(5, businessRatings.size());
+        List<BusinessRating> topBusinesses = businessRatings.subList(0, businessesToShow);
+
+        // Build response
+        StringBuilder response = new StringBuilder();
+        if (businesses.size() > 5) {
+            response.append("Here are the top 5 highest-rated ").append(category)
+                    .append(" businesses in ").append(area).append(":\n\n");
+        } else {
+            response.append("Here are all the ").append(category)
+                    .append(" businesses in ").append(area).append(":\n\n");
+        }
+
+        for (BusinessRating br : topBusinesses) {
+            response.append("🏢 ").append(br.name).append("\n");
+            response.append("⭐ Rating: ").append(String.format("%.1f", br.rating)).append("/5.0\n");
+            response.append("📍 ").append(br.address).append("\n\n");
+        }
+
+        if (businesses.size() > 5) {
+            response.append("There are ").append(businesses.size() - 5)
+                    .append(" more businesses available. Would you like to see them?");
+        }
+
+        return response.toString();
+    }
+
+    // Helper record to store business rating info
+    private record BusinessRating(String name, double rating, String address) {
+    }
+
+    private String handleRatingCheck(String businessName) {
+        // Find the business by name (case insensitive)
+        Business business = businessRepository.findByBusinessNameIgnoreCase(businessName);
+        if (business == null) {
+            return "No business with this name is registered in the system. Please provide a valid business name if you want to check ratings.";
+        }
+
+        // Get the average rating
+        Double rating = reviewService.getAverageRatingByBusiness(business.getId());
+
+        // If business has no ratings (0.0), show top alternatives
+        if (rating == null || rating == 0.0) {
+            // Get all businesses in the same category
+            Page<Business> sameCategoryBusinesses = businessRepository.findByServiceCategoryId(
+                    business.getServiceCategory().getId(),
+                    Pageable.unpaged());
+
+            // Get top 5 rated businesses in same category (excluding the current one)
+            List<Business> topRated = sameCategoryBusinesses.getContent().stream()
+                    .filter(b -> !b.getId().equals(business.getId())) // exclude current business
+                    .sorted((b1, b2) -> {
+                        Double r1 = reviewService.getAverageRatingByBusiness(b1.getId());
+                        Double r2 = reviewService.getAverageRatingByBusiness(b2.getId());
+                        return Double.compare(
+                                r2 != null ? r2 : 0.0,
+                                r1 != null ? r1 : 0.0);
+                    })
+                    .limit(5)
+                    .collect(Collectors.toList());
+
+            if (topRated.isEmpty()) {
+                return "This business hasn't been rated yet, and we couldn't find other businesses in the same category.";
+            }
+
+            // Build response with top alternatives
+            StringBuilder response = new StringBuilder();
+            response.append(
+                    "This business hasn't been rated yet. Here are the top rated businesses that provide similar services:\n");
+
+            for (Business b : topRated) {
+                Double businessRating = reviewService.getAverageRatingByBusiness(b.getId());
+                response.append("- ").append(b.getBusinessName())
+                        .append(" (Rating: ")
+                        .append(String.format("%.1f", businessRating != null ? businessRating : 0.0))
+                        .append("/5.0)\n");
+            }
+
+            return response.toString();
+        }
+
+        // If business has ratings, return the average
+        return String.format("The average rating for %s is %.1f/5.0",
+                business.getBusinessName(),
+                rating) + ".If you would like to know more information about this business,please let me know";
+    }
+
+    private String handleLocationServiceCheck(String parameters) {
+        ServiceCategory sc = serviceCategoryRepository.findByNameIgnoreCase(parameters).orElse(null);
+        if (sc == null) {
+            return "No businesses of this type are registered in our system. Sorry for the inconvenience.";
+        }
+
+        Page<Business> businesses = businessRepository.findByServiceCategoryId(sc.getId(), Pageable.unpaged());
+
+        // Use a Set to avoid duplicate areas
+        Set<String> uniqueAreas = new HashSet<>();
+
+        for (Business b : businesses) {
+            List<BusinessLocation> locations = businessLocationRepository.findByBusiness(b);
+            for (BusinessLocation location : locations) {
+                if (location.getArea() != null && !location.getArea().isEmpty()) {
+                    uniqueAreas.add(location.getArea());
+                }
+            }
+        }
+
+        if (uniqueAreas.isEmpty()) {
+            return "We couldn't find any specific locations offering " + sc.getName() + " services.";
+        }
+
+        // Format the areas list naturally
+        String areasList;
+        if (uniqueAreas.size() == 1) {
+            areasList = "the " + uniqueAreas.iterator().next() + " area";
+        } else {
+            List<String> sortedAreas = new ArrayList<>(uniqueAreas);
+            Collections.sort(sortedAreas);
+
+            if (sortedAreas.size() == 2) {
+                areasList = sortedAreas.get(0) + " and " + sortedAreas.get(1);
+            } else {
+                String last = sortedAreas.remove(sortedAreas.size() - 1);
+                areasList = String.join(", ", sortedAreas) + ", and " + last;
+            }
+            areasList = "these areas: " + areasList;
+        }
+
+        return sc.getName() + " services are available in " + areasList + ". " +
+                "Would you like me to help you find specific businesses in any of these locations?";
+    }
+
+    private String handleHours(String businessName, Long conversationId) {
+        if (businessName == null || businessName.isBlank()) {
+            // Check conversation history for last mentioned business name
+            AIConversation conversation = conversationService.getConversationById(conversationId);
+            List<AIMessage> lastMessages = messageService.getLastNMessagesByConversationId(conversationId, 5);
+            for (AIMessage msg : lastMessages) {
+                if (msg.getUserMessage().contains("business") || msg.getAiReply().contains("business")) {
+                    String[] parts = msg.getUserMessage().split(":");
+                    if (parts.length > 0) {
+                        businessName = parts[0];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (businessName == null || businessName.isBlank()) {
+            return "Please provide a valid business name to check its hours.";
+        }
+
+        Business business = businessRepository.findByBusinessNameIgnoreCase(businessName);
+        if (business == null) {
+            return "The business '" + businessName + "' does not exist. Please check the name and try again.";
+        }
+        // Fetch business hours
+        List<BusinessHours> hoursList = businessHoursRepository.findByBusinessId(business.getId());
+
+        if (hoursList.isEmpty()) {
+            return "The business '" + businessName + "' hasn't set their working hours yet.";
+        }
+
+        // Group by day and check for closed days
+        Map<Integer, BusinessHours> hoursByDay = hoursList.stream()
+                .collect(Collectors.toMap(
+                        BusinessHours::getDayOfWeek,
+                        Function.identity()));
+
+        StringBuilder response = new StringBuilder();
+        response.append("Here are the operating hours for ").append(businessName).append(":\n\n");
+
+        // Define day names with 0=Sunday
+        String[] dayNames = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+
+        for (int day = 0; day < 7; day++) {
+            BusinessHours hours = hoursByDay.get(day);
+            String dayName = dayNames[day];
+
+            if (hours == null || hours.getIsClosed()) {
+                response.append("• ").append(dayName).append(": Closed\n");
+            } else {
+                response.append("• ").append(dayName)
+                        .append(": Open from ")
+                        .append(formatTime(hours.getOpenTime()))
+                        .append(" to ")
+                        .append(formatTime(hours.getCloseTime()))
+                        .append("\n");
+            }
+        }
+
+        return response.toString();
+    }
+
+    // Helper method to format time in AM/PM
+    private String formatTime(LocalTime time) {
+        if (time == null)
+            return "Closed";
+
+        int hour = time.getHour();
+        int minute = time.getMinute();
+        String amPm = hour < 12 ? "AM" : "PM";
+
+        // Convert to 12-hour format
+        hour = hour % 12;
+        hour = hour == 0 ? 12 : hour;
+
+        return String.format("%d:%02d %s", hour, minute, amPm);
+    }
+
+    private String handleGreeting() {
+        return "Hello,I am Bizzy! How can I assist you today? If you have any questions about businesses or bookings, feel free to ask!";
+    }
+
     private String handleEnquiry(Long conversationId) {
-        User user=conversationService.getConversationById(conversationId).getUser();
-        return "Hello "+user.getName() +"! I am Bizbooker, your personal business assistant. I can help you find businesses, book appointments, and answer your questions about our services. Just ask me anything related to businesses or bookings, and I'll do my best to assist you!";
-        
+        User user = conversationService.getConversationById(conversationId).getUser();
+        return "Hello " + user.getName()
+                + "! I am Bizzy, your personal business assistant. I can help you find businesses, book appointments, and answer your questions about our services. Just ask me anything related to businesses or bookings, and I'll do my best to assist you!";
+
     }
 
     private String handleBookingEnquiry() {
         return "You can go to the services option on top your dashboard where you can filter based on different services and areas also you can search for businesses in the search area. After finding a business you will be able book it from the profile of that business.Also to make your life easier,I can help you book appointments with businesses. Just tell me the business name, location, and your preferred date and time, and I'll check availability for you and I can also book for you.";
     }
-
-    
 
     private String extractResponseText(String jsonResponse) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
@@ -316,17 +687,75 @@ public class GeminiModelController {
         }
     }
 
-    // Other handler methods
     private String handleCategoryRequest(String categoryName) {
-        return "(" + categoryName + "):categoryRequest";
+        ServiceCategory sc = serviceCategoryRepository.findByNameIgnoreCase(categoryName).orElse(null);
+        if (sc == null) {
+            return "Sorry, no businesses of this type are registered in our system.";
+        }
+
+        List<Business> businesses = businessRepository.findByServiceCategoryId(sc.getId(), Pageable.unpaged())
+                .getContent();
+
+        if (businesses.isEmpty()) {
+            return "We couldn't find any businesses in the " + categoryName + " category.";
+        }
+
+        // For 5 or fewer businesses, show all
+        if (businesses.size() <= 5) {
+            StringBuilder response = new StringBuilder("Here are all the " + categoryName + " businesses:\n");
+            for (Business business : businesses) {
+                response.append("- ").append(business.getBusinessName()).append("\n");
+            }
+            return response.toString();
+        }
+        // For more than 5 businesses, show top 5 rated
+        else {
+            // Create two parallel lists to store names and ratings
+            List<String> businessNames = new ArrayList<>();
+            List<Double> businessRatings = new ArrayList<>();
+
+            // Collect all business names and ratings
+            for (Business business : businesses) {
+                businessNames.add(business.getBusinessName());
+                Double rating = reviewService.getAverageRatingByBusiness(business.getId());
+                businessRatings.add(rating != null ? rating : 0.0);
+            }
+
+            // Sort both lists by rating (highest first)
+            for (int i = 0; i < businessRatings.size(); i++) {
+                for (int j = i + 1; j < businessRatings.size(); j++) {
+                    if (businessRatings.get(i) < businessRatings.get(j)) {
+                        // Swap ratings
+                        double tempRating = businessRatings.get(i);
+                        businessRatings.set(i, businessRatings.get(j));
+                        businessRatings.set(j, tempRating);
+
+                        // Swap names to maintain correspondence
+                        String tempName = businessNames.get(i);
+                        businessNames.set(i, businessNames.get(j));
+                        businessNames.set(j, tempName);
+                    }
+                }
+            }
+
+            // Build response with top 5
+            StringBuilder response = new StringBuilder(
+                    "Here are the top 5 highest-rated " + categoryName + " businesses:\n");
+            for (int i = 0; i < Math.min(5, businessNames.size()); i++) {
+                response.append("- ").append(businessNames.get(i))
+                        .append(" (Rating: ").append(String.format("%.1f", businessRatings.get(i))).append("/5.0)\n");
+            }
+            response.append("\nThere are more businesses available in this category. Would you like to see more?");
+            return response.toString();
+        }
     }
 
-    private String handleBusinessCreationRequest(String params,Long conversationId) {
-       
-        User user = conversationService.getConversationById(conversationId).getUser();
-       return "Hey there , "+user.getName()+" ! You can add your own businesses for other customers to find and book appointments with. Go to the 'Create Business' section in your dashboard and fill out the required information. If you need help, just ask me!Then after that you can add business hours for your business and slots so that customers can book appointments with it you can do theese by going to my business section in your dashborad.Thank you";
+    private String handleBusinessCreationRequest(String params, Long conversationId) {
 
-            
+        User user = conversationService.getConversationById(conversationId).getUser();
+        return "Hey there , " + user.getName()
+                + " ! You can add your own businesses for other customers to find and book appointments with. Go to the 'Create Business' section in your dashboard and fill out the required information. If you need help, just ask me!Then after that you can add business hours for your business and slots so that customers can book appointments with it you can do theese by going to my business section in your dashborad.Thank you";
+
     }
 
     private String handleSearchCategory(String params) {
@@ -368,7 +797,7 @@ public class GeminiModelController {
         return "(" + categoryName + "):BookingCategory";
     }
 
-    private String handleBookingBusiness(String params,Long conversationId) {
+    private String handleBookingBusiness(String params, Long conversationId) {
         System.out.println(params);
 
         String[] parts = params.split(":");
@@ -403,9 +832,6 @@ public class GeminiModelController {
             return "No slots can be booked in the past. Please provide a realistic date and time.";
         }
 
-
-
-
         // Check if business exists
         Business business = businessRepository.findByBusinessNameIgnoreCase(businessName);
         if (business == null) {
@@ -418,10 +844,11 @@ public class GeminiModelController {
         }
         // Find matching location by area (if provided)
         // Optional<BusinessLocation> matchingLocation = locations.stream()
-        //         .filter(loc -> area == null ||
-        //                 (loc.getArea() != null && loc.getArea().equalsIgnoreCase(area)))
-        //         .findFirst();
-        Optional<BusinessLocation> matchingLocation = businessLocationRepository.findOneByBusinessIdAndKeyword(business.getId(),area);
+        // .filter(loc -> area == null ||
+        // (loc.getArea() != null && loc.getArea().equalsIgnoreCase(area)))
+        // .findFirst();
+        Optional<BusinessLocation> matchingLocation = businessLocationRepository
+                .findOneByBusinessIdAndKeyword(business.getId(), area);
         if (!matchingLocation.isPresent()) {
             String locationMessage = area == null
                     ? "Please specify which location you're interested in. Available locations: " +
@@ -454,8 +881,24 @@ public class GeminiModelController {
         if (businessHours == null) {
             return "The buisness has not configured its slots yet so it can't be booked at this time. But you can search the business name and see its details and contect them using the contact information provided in the business profile.";
         }
-        if(businessHours.getIsClosed()){
+        if (businessHours.getIsClosed()) {
             return "Sorry.The business is closed on this day. Please choose another day to book an appointment.";
+        }
+        if (businessHoursRepository.findByBusinessId(business.getId()).isEmpty()) {
+            return "The business has not configured its slots yet so it can't be booked at this time. But you can search the business name and see its details and contact them using the contact information provided in the business profile.";
+        }
+
+        LocalTime openTime = businessHours.getOpenTime();
+        LocalTime closeTime = businessHours.getCloseTime();
+        LocalTime desiredTime = desiredDateTime.toLocalTime();
+
+        if (desiredTime.isBefore(openTime) || desiredTime.isAfter(closeTime)) {
+            return "The business is closed at this time. It is open from " + openTime + " to " + closeTime
+                    + ". Please choose a time within these hours.";
+        }
+
+        if (businessHours.getOpenTime() == null || businessHours.getCloseTime() == null) {
+            return "The business has not configured its slots yet so it can't be booked at this time. But you can search the business name and see its details and contact them using the contact information provided in the business profile.";
         }
 
         // Check slot availability (using your repository method)
@@ -489,10 +932,10 @@ public class GeminiModelController {
             LocalDateTime endDateTime = LocalDateTime.of(desiredDate, slotInterval.getEndTime());
             appointment.setEndTime(endDateTime);
             slotInterval.setUsedSlots(slotInterval.getUsedSlots() + slotsToBook);
-            System.out.println(slotInterval.getConfiguration().getId() );
+            System.out.println(slotInterval.getConfiguration().getId());
             slotIntervalRepository.save(slotInterval);
             appointment.setCustomer(conversationService.getConversationById(conversationId).getUser());
-            
+
             appointmentRepository.save(appointment);
             return "Successfully booked " + slotsToBook + " slot(s) at ";
         }
@@ -536,6 +979,17 @@ public class GeminiModelController {
                 return "The business '" + businessName + "' doesn't exist. Please check the name and try again.";
             }
 
+            if (business.getApprovalStatus() == ApprovalStatus.PENDING) {
+                return "The business '" + business.getBusinessName()
+                        + "' is not approved yet. So you can't book an appointment with it through me. But I can give you the contact information of the business so that you can contact them and book an appointment with them directly.";
+
+            }
+
+            if (business.getApprovalStatus() == ApprovalStatus.REJECTED) {
+                return "The business '" + business.getBusinessName()
+                        + "' has been rejected. So you can't book an appointment with it through me and no informations can be provided about it for security purposes. Sorry for the incovenience";
+            }
+
             // Check if location exists for this business
             List<BusinessLocation> locations = business.getLocations();
             if (locations == null || locations.isEmpty()) {
@@ -544,10 +998,11 @@ public class GeminiModelController {
 
             // Find matching location by area (if provided)
             // Optional<BusinessLocation> matchingLocation = locations.stream()
-            //         .filter(loc -> area == null ||
-            //                 (loc.getArea() != null && loc.getArea().equalsIgnoreCase(area)))
-            //         .findFirst();
-            Optional<BusinessLocation> matchingLocation = businessLocationRepository.findOneByBusinessIdAndKeyword(business.getId(),area);
+            // .filter(loc -> area == null ||
+            // (loc.getArea() != null && loc.getArea().equalsIgnoreCase(area)))
+            // .findFirst();
+            Optional<BusinessLocation> matchingLocation = businessLocationRepository
+                    .findOneByBusinessIdAndKeyword(business.getId(), area);
             if (!matchingLocation.isPresent()) {
                 String locationMessage = area == null
                         ? "Please specify which location you're interested in. Available locations: " +
@@ -563,12 +1018,34 @@ public class GeminiModelController {
             }
 
             BusinessLocation location = matchingLocation.get();
+            if (businessHoursRepository.findByBusinessId(business.getId()).isEmpty()) {
+                return "The business has not configured its slots yet so it can't be booked at this time. But you can search the business name and see its details and contact them using the contact information provided in the business profile.";
+            }
+            int dayOfWeek = desiredDateTime.toLocalDate().getDayOfWeek().getValue() % 7;
+            BusinessHours businessHours = businessHoursRepository
+                    .findByBusinessIdAndDayOfWeek(business.getId(), dayOfWeek)
+                    .orElse(null);
+
+            if (businessHours == null || businessHours.getIsClosed()) {
+                return "The business is closed on this day. Please choose another day to check availability.";
+            }
+            LocalTime openTime = businessHours.getOpenTime();
+            LocalTime closeTime = businessHours.getCloseTime();
+            LocalTime desiredTime = desiredDateTime.toLocalTime();
+            if (desiredTime.isBefore(openTime) || desiredTime.isAfter(closeTime)) {
+                return "The business is closed at this time. It is open from " + openTime + " to " + closeTime
+                        + ". Please choose a time within these hours.";
+            }
+
+            if (businessHours.getOpenTime() == null || businessHours.getCloseTime() == null) {
+                return "The business has not configured its slots yet so it can't be booked at this time. But you can search the business name and see its details and contact them using the contact information provided in the business profile.";
+            }
 
             // Check slot availability (using your repository method)
             int availableSlots = slotIntervalRepository.getAvailableSlotsCount(
                     location.getId(),
                     desiredDateTime);
-            int dayOfWeek = desiredDateTime.toLocalDate().getDayOfWeek().getValue();
+
             if (availableSlots <= 0) {
                 return "Sorry, there are no available slots at " + location.getArea() +
                         " for " + desiredDateTime.toLocalDate() + " at " +
@@ -603,7 +1080,7 @@ public class GeminiModelController {
                 .collect(Collectors.joining("; "));
         return "The business " + business.getBusinessName() + " is located at " + locationDetails
                 + ". If you want to book an appointment with this business, please provide the date and time.";
-        
+
     }
 
     private void saveConversationMessages(AIConversation conversation,

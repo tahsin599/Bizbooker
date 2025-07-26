@@ -19,4 +19,6 @@ public interface BusinessHoursRepository extends JpaRepository<BusinessHours, Lo
     void deleteByBusinessId(Long businessId);
     
     Optional<BusinessHours> findByBusinessIdAndDayOfWeek(Long businessId, Integer dayOfWeek);
+
+    List<BusinessHours> findByBusinessId(Long businessId);
 }

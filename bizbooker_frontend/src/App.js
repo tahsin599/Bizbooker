@@ -28,6 +28,8 @@ import BusinessApprovalDashboard from './modules/PendingBusinesses';
 import PendingBusinesses from './modules/PendingBusinesses';
 import Map from './modules/Map'; // Import the Map component
 import BusinessForm from './modules/BusinessForm'; // Import the BusinessForm component
+import BusinessNotifications from './modules/BusinessNotifications';
+import UserProfilePage from './modules/UserProfilePage';
 function App() {
   return (
     <BrowserRouter>
@@ -57,6 +59,8 @@ function App() {
           <Route path="/business/reviews" element={<><Navbar isAuthenticated={true} /><BusinessReviewsPage /></>} />
              <Route path="/approve" element={<><Navbar isAuthenticated={true} /><PendingBusinesses/></>} />
              <Route path="/map" element={<><Navbar isAuthenticated={true} /><BusinessForm /></>} />
+             <Route path="/notifications" element={<><Navbar isAuthenticated={true}/> <BusinessNotifications/><Footer/></>}/>
+             <Route path="/profile" element={<><Navbar isAuthenticated={true}/> <UserProfilePage/><Footer/></>}/>
        
 
           {/* Add more routes as needed */}
