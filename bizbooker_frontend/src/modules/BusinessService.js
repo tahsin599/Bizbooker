@@ -83,9 +83,15 @@ const BusinessService = () => {
     }
   };
 
-  const fetchSlotConfig = async (locationId) => {
+  const fetchSlotConfig = async (locationId, dateString) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/slot-config/location/${locationId}`, {
+      const dayOfWeek = dateString ? new Date(dateString).getDay() : null;
+      let url = `${API_BASE_URL}/api/slot-config/location/${locationId}`;
+      if (dayOfWeek !== null) {
+        url += `/${dayOfWeek}`;
+      }
+
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -153,7 +159,7 @@ const BusinessService = () => {
 
           const availableSlots = interval ? (interval.maxSlots - interval.usedSlots) : 0;
           const status = availableSlots > 0 ? 'vacant' : 'booked';
-          
+
           // Get price from interval or fallback to slot config price
           const slotPrice = interval?.price || config.slotPrice || 0;
 
@@ -260,12 +266,22 @@ const BusinessService = () => {
     return days;
   };
 
-  const handleDateClick = (dateInfo) => {
-    if (dateInfo && !dateInfo.isClosed && dateInfo.hasSlots) {
-      setSelectedDate(dateInfo.date);
-      setSelectedTime(null);
-    }
-  };
+ const handleDateClick = (dateInfo) => {
+  if (dateInfo && !dateInfo.isClosed && dateInfo.hasSlots) {
+    setSelectedDate(dateInfo.date);
+    setSelectedTime(null);
+    
+    // Calculate day of week (0=Sunday, 1=Monday, etc.)
+    const date = new Date(dateInfo.date);
+    const dayOfWeek = date.getDay(); // Returns 0-6
+    
+    // Fetch slot config for this specific location and day
+    fetchSlotConfig(selectedLocation.locationId, dateInfo.date);
+    
+    // Optional: Log for debugging
+    console.log(`Selected date: ${dateInfo.date}, Day of week: ${dayOfWeek}`);
+  }
+};
 
   const handleTimeClick = (timeSlot) => {
     if (timeSlot.status === 'vacant' && timeSlot.availableSlots > 0) {
@@ -289,12 +305,12 @@ const BusinessService = () => {
             endTime: `${selectedDate}T${selectedSlot.end}:00`,
             configId: selectedSlot.intervalData.configId,
             userSelectedCount: selectedSlot.selectedCount || 1,
-            slotPrice: selectedSlot.price*selectedSlot.selectedCount || 0,
+            slotPrice: selectedSlot.price * selectedSlot.selectedCount || 0,
             notes: ""
           };
 
           console.log('Creating pending appointment:', appointmentData);
-          
+
           const appointmentResponse = await fetch(`${API_BASE_URL}/api/appointments/pending`, {
             method: 'POST',
             headers: {
@@ -311,7 +327,7 @@ const BusinessService = () => {
 
           const createdAppointment = await appointmentResponse.json();
           console.log('Pending appointment created:', createdAppointment);
-          
+
           // Store appointment ID for later use (backend returns appointmentId, not id)
           const appointmentId = createdAppointment.appointmentId || createdAppointment.id;
           localStorage.setItem('pendingAppointmentId', appointmentId);
@@ -338,25 +354,25 @@ const BusinessService = () => {
               appointmentId: appointmentId  // Pass the appointment ID to link the payment
             })
           });
-          
+
           if (!res.ok) {
             const errorText = await res.text();
             console.error('Failed to create checkout session:', errorText);
             throw new Error(`Failed to create checkout session: ${errorText}`);
           }
-          
+
           const stripeData = await res.json();
           console.log('Stripe checkout session response:', stripeData);
-          
+
           if (stripeData.error) {
             throw new Error(`Stripe error: ${stripeData.error}`);
           }
-          
+
           if (stripeData.url && stripeData.sessionId) {
             // Store the session ID as payment reference
             localStorage.setItem('stripeSessionId', stripeData.sessionId);
             sessionStorage.setItem('stripeSessionId', stripeData.sessionId);
-            
+
             // Redirect to Stripe Checkout
             window.location.href = stripeData.url;
           } else {
@@ -436,8 +452,8 @@ const BusinessService = () => {
         }}
         onCancel={() => setBookingSuccess(false)}
         footer={[
-          <button 
-            key="ok" 
+          <button
+            key="ok"
             className="modal-ok-btn"
             onClick={() => {
               setBookingSuccess(false);
@@ -514,7 +530,7 @@ const BusinessService = () => {
         >
           Locations
         </button>
-         <button
+        <button
           className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
           onClick={() => setActiveTab('reviews')}
         >
@@ -646,7 +662,7 @@ const BusinessService = () => {
                           availableSlots[selectedDate].map((timeSlot, index) => {
                             const isAvailable = timeSlot.status === 'vacant' && timeSlot.availableSlots > 0;
                             const isFullyBooked = timeSlot.availableSlots <= 0;
-                            
+
                             return (
                               <div
                                 key={index}
@@ -693,7 +709,7 @@ const BusinessService = () => {
                                             Math.max(1, parseInt(e.target.value) || 1),
                                             timeSlot.availableSlots
                                           );
-                                        
+
                                           // Update the selected count in availableSlots
                                           setAvailableSlots(prev => ({
                                             ...prev,
@@ -743,8 +759,8 @@ const BusinessService = () => {
                           (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0).toFixed(2)
                         }</p>
                         <p className="total-price"><strong>Total:</strong> ${
-                          ((availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0) * 
-                           (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.selectedCount || 1)).toFixed(2)
+                          ((availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0) *
+                            (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.selectedCount || 1)).toFixed(2)
                         }</p>
                       </div>
                       <button className="book-appointment-btn" onClick={handleBookAppointment}>
@@ -759,62 +775,62 @@ const BusinessService = () => {
               )}
             </div>
           </div>
-        ) :activeTab === 'locations' ?(
-  /* Locations Tab */
-  <div className="locations-section">
-    <h3>Our Locations</h3>
-    
-    {/* Add the map component here */}
-    <div className="locations-map-container">
-      <LocationSelectMap locations={business.locations} />
-    </div>
-    
-    <div className="locations-grid">
-      {business.locations?.map((location, index) => (
-        <div key={index} className="location-card">
-          <div className="location-header">
-            <h4>
-              <MapPin size={16} /> Location {index + 1}
-              {location.isPrimary && <span className="primary-badge">Primary</span>}
-            </h4>
+        ) : activeTab === 'locations' ? (
+          /* Locations Tab */
+          <div className="locations-section">
+            <h3>Our Locations</h3>
+
+            {/* Add the map component here */}
+            <div className="locations-map-container">
+              <LocationSelectMap locations={business.locations} />
+            </div>
+
+            <div className="locations-grid">
+              {business.locations?.map((location, index) => (
+                <div key={index} className="location-card">
+                  <div className="location-header">
+                    <h4>
+                      <MapPin size={16} /> Location {index + 1}
+                      {location.isPrimary && <span className="primary-badge">Primary</span>}
+                    </h4>
+                  </div>
+                  <div className="location-info">
+                    <div className="info-row">
+                      <span>Address:</span>
+                      <p>{location.address}, {location.area}, {location.city}</p>
+                    </div>
+                    <div className="info-row">
+                      <span>Postal Code:</span>
+                      <p>{location.postalCode}</p>
+                    </div>
+                    <div className="info-row">
+                      <span>Contact:</span>
+                      <p>{location.contactPhone}</p>
+                    </div>
+                    <div className="info-row">
+                      <span>Email:</span>
+                      <p>{location.contactEmail}</p>
+                    </div>
+                  </div>
+                  <button
+                    className="view-schedule-btn"
+                    onClick={() => {
+                      setActiveTab('services');
+                      handleLocationSelect(location);
+                    }}
+                  >
+                    <HoursIcon size={16} /> View Schedule
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="location-info">
-            <div className="info-row">
-              <span>Address:</span>
-              <p>{location.address}, {location.area}, {location.city}</p>
-            </div>
-            <div className="info-row">
-              <span>Postal Code:</span>
-              <p>{location.postalCode}</p>
-            </div>
-            <div className="info-row">
-              <span>Contact:</span>
-              <p>{location.contactPhone}</p>
-            </div>
-            <div className="info-row">
-              <span>Email:</span>
-              <p>{location.contactEmail}</p>
-            </div>
+        ) : (
+          /* Reviews Tab */
+          <div className="reviews-section">
+            <BusinessReviewsTab businessId={businessId} />
           </div>
-          <button
-            className="view-schedule-btn"
-            onClick={() => {
-              setActiveTab('services');
-              handleLocationSelect(location);
-            }}
-          >
-            <HoursIcon size={16} /> View Schedule
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-): (
-    /* Reviews Tab */
-    <div className="reviews-section">
-      <BusinessReviewsTab businessId={businessId} />
-    </div>
-  )}
+        )}
       </div>
     </div>
   );

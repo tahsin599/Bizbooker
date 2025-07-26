@@ -36,11 +36,11 @@ public class SlotIntervalController {
                      : ResponseEntity.badRequest().body("No available slots");
     }
 
-    @PostMapping("/config/{configId}/initialize")
-    public ResponseEntity<Void> initializeSlots(
-            @PathVariable Long configId) {
-        SlotConfiguration config = slotConfigService.getByLocationId(configId);
-        slotIntervalService.initializeSlots(config);
-        return ResponseEntity.ok().build();
-    }
+    // @PostMapping("/config/{configId}/initialize")
+    // public ResponseEntity<Void> initializeSlots(
+    //         @PathVariable Long configId) {
+    //     SlotConfiguration config = slotConfigService.getByLocationId(configId);
+    //     slotIntervalService.initializeSlots(config);
+    //     return ResponseEntity.ok().build();
+    // }
 }

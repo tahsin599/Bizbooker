@@ -79,60 +79,60 @@ public class BusinessHoursController {
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/generate-slots/{businessId}")
-    public ResponseEntity<List<Map<String, Object>>> generateSlots(
-            @PathVariable Long businessId,
-            @RequestParam String date) {
+    // @GetMapping("/generate-slots/{businessId}")
+    // public ResponseEntity<List<Map<String, Object>>> generateSlots(
+    //         @PathVariable Long businessId,
+    //         @RequestParam String date) {
         
-        try {
-            List<Map<String, Object>> slots = new ArrayList<>();
+    //     try {
+    //         List<Map<String, Object>> slots = new ArrayList<>();
             
-            // Get all business locations for this business
-            Business business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new RuntimeException("Business not found"));
-            List<BusinessLocation> locations = businessLocationRepository.findByBusiness(business);
+    //         // Get all business locations for this business
+    //         Business business = businessRepository.findById(businessId)
+    //             .orElseThrow(() -> new RuntimeException("Business not found"));
+    //         List<BusinessLocation> locations = businessLocationRepository.findByBusiness(business);
             
-            if (locations.isEmpty()) {
-                return ResponseEntity.ok(slots);
-            }
+    //         if (locations.isEmpty()) {
+    //             return ResponseEntity.ok(slots);
+    //         }
             
-            // For now, use the first location (you might want to support multiple locations later)
-            BusinessLocation location = locations.get(0);
+    //         // For now, use the first location (you might want to support multiple locations later)
+    //         BusinessLocation location = locations.get(0);
             
-            try {
-                // Get slot configuration for this location
-                SlotConfiguration config = slotConfigService.getByLocationId(location.getId());
+    //         try {
+    //             // Get slot configuration for this location
+    //             SlotConfiguration config = slotConfigService.getByLocationId(location.getId());
                 
-                // Get all slot intervals for this configuration
-                List<SlotInterval> intervals = slotIntervalService.getIntervalsByConfigId(config.getId());
+    //             // Get all slot intervals for this configuration
+    //             List<SlotInterval> intervals = slotIntervalService.getIntervalsByConfigId(config.getId());
                 
-                // Convert intervals to frontend-friendly slot data
-                for (SlotInterval interval : intervals) {
-                    Map<String, Object> slot = new HashMap<>();
-                    slot.put("time", interval.getStartTime().toString());
-                    slot.put("endTime", interval.getEndTime().toString());
-                    slot.put("price", interval.getPrice());
-                    slot.put("configId", config.getId());
-                    slot.put("available", interval.getUsedSlots() < interval.getMaxSlots());
-                    slot.put("availableSlots", interval.getMaxSlots() - interval.getUsedSlots());
-                    slot.put("maxSlots", interval.getMaxSlots());
-                    slot.put("usedSlots", interval.getUsedSlots());
+    //             // Convert intervals to frontend-friendly slot data
+    //             for (SlotInterval interval : intervals) {
+    //                 Map<String, Object> slot = new HashMap<>();
+    //                 slot.put("time", interval.getStartTime().toString());
+    //                 slot.put("endTime", interval.getEndTime().toString());
+    //                 slot.put("price", interval.getPrice());
+    //                 slot.put("configId", config.getId());
+    //                 slot.put("available", interval.getUsedSlots() < interval.getMaxSlots());
+    //                 slot.put("availableSlots", interval.getMaxSlots() - interval.getUsedSlots());
+    //                 slot.put("maxSlots", interval.getMaxSlots());
+    //                 slot.put("usedSlots", interval.getUsedSlots());
                     
-                    slots.add(slot);
-                }
+    //                 slots.add(slot);
+    //             }
                 
-            } catch (RuntimeException e) {
-                // If no slot configuration found, return empty slots list
-                System.out.println("No slot configuration found for location: " + location.getId());
-            }
+    //         } catch (RuntimeException e) {
+    //             // If no slot configuration found, return empty slots list
+    //             System.out.println("No slot configuration found for location: " + location.getId());
+    //         }
             
-            return ResponseEntity.ok(slots);
+    //         return ResponseEntity.ok(slots);
             
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
-        }
-    }
+    //     } catch (Exception e) {
+    //         e.printStackTrace();
+    //         return ResponseEntity.internalServerError().build();
+    //     }
+    // }
 
     private BusinessHours convertToEntity(BusinessHoursDTO dto) {
         BusinessHours entity = new BusinessHours();

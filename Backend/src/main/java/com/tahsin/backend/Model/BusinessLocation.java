@@ -59,8 +59,16 @@ public class BusinessLocation {
     @OneToMany(mappedBy = "location")
     private List<Appointment> appointments;
 
-    @OneToOne(mappedBy = "location", cascade = CascadeType.ALL)
-    private SlotConfiguration slotConfiguration;
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL)
+    private List<SlotConfiguration> slotConfiguration;
+
+    public List<SlotConfiguration> getSlotConfiguration() {
+        return slotConfiguration;
+    }
+
+    public void setSlotConfiguration(List<SlotConfiguration> slotConfiguration) {
+        this.slotConfiguration = slotConfiguration;
+    }
 
     public BusinessLocation(Long locationId) {
         //TODO Auto-generated constructor stub
@@ -169,13 +177,7 @@ public class BusinessLocation {
         this.appointments = appointments;
     }
 
-    public SlotConfiguration getSlotConfiguration() {
-        return slotConfiguration;
-    }
-
-    public void setSlotConfiguration(SlotConfiguration slotConfiguration) {
-        this.slotConfiguration = slotConfiguration;
-    }
+   
 
     @Override
     public String toString() {

@@ -26,8 +26,20 @@ public class SlotConfigController {
         return ResponseEntity.ok(convertToResponseDTO(savedConfig));
     }
 
-    @GetMapping("/location/{locationId}")
-    public ResponseEntity<SlotConfigResponseDTO> getSlotConfig(@PathVariable Long locationId) {
+    @GetMapping("/location/{locationId}/{dayOfWeek}")
+    public ResponseEntity<SlotConfigResponseDTO> getSlotConfig(@PathVariable Long locationId,@PathVariable int dayOfWeek) {
+        SlotConfiguration config = slotConfigService.getByLocationIdAndDayOfWeek(locationId,dayOfWeek);
+        SlotConfigResponseDTO response = convertToResponseDTO(config);
+        
+        // Add interval information
+        List<SlotInterval> intervals = slotIntervalService.getIntervalsByConfigId(config.getId());
+        response.setIntervals(convertToIntervalDTOs(intervals));
+        
+        return ResponseEntity.ok(response);
+    }
+
+      @GetMapping("/location/{locationId}")
+    public ResponseEntity<SlotConfigResponseDTO> getSlotConfigs(@PathVariable Long locationId) {
         SlotConfiguration config = slotConfigService.getByLocationId(locationId);
         SlotConfigResponseDTO response = convertToResponseDTO(config);
         
@@ -38,11 +50,12 @@ public class SlotConfigController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/reset/{locationId}")
-    public ResponseEntity<Void> resetSlots(@PathVariable Long locationId) {
-        slotConfigService.resetUsedSlots(locationId);
-        return ResponseEntity.ok().build();
-    }
+
+    // @PostMapping("/reset/{locationId}")
+    // public ResponseEntity<Void> resetSlots(@PathVariable Long locationId) {
+    //     slotConfigService.resetUsedSlots(locationId);
+    //     return ResponseEntity.ok().build();
+    // }
 
     private SlotConfigResponseDTO convertToResponseDTO(SlotConfiguration config) {
         SlotConfigResponseDTO dto = new SlotConfigResponseDTO();
