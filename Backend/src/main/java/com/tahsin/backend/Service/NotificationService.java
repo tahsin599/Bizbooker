@@ -21,7 +21,7 @@ public class NotificationService {
     @Autowired
     private UserRepository repository;
 
-    public void addNotification(String message,Long userId,String notificationType,String businessName) {
+    public void addNotification(String message,Long userId,Long related,String notificationType,String businessName) {
         Notification notification=new Notification();
         notification.setMessage(message);
         notification.setUser(repository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
@@ -29,6 +29,7 @@ public class NotificationService {
         notification.setRelatedEntityType(businessName);
         notification.setTitle("Notification");
         notification.setIsRead(false);
+        notification.setRelatedEntityId(related);
         notificationRepository.save(notification);
     }
 

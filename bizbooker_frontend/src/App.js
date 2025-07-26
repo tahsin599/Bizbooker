@@ -58,7 +58,7 @@ function App() {
           <Route path="/business/customer/:businessId" element={<><Navbar/><BusinessService /><Footer/></>} />
           <Route path="/business/category/:categoryId" element={<><Navbar /><CategoryBusinessListingPage /><Footer /></>} />
           <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
-          <Route path="/business/config/:businessId" element={<><BusinessConfig /></>} /> 
+          <Route path="/business/config/:businessId" element={<><Navbar isAuthenticated={true}/><BusinessConfig /><Footer/></>} /> 
           <Route path="/bookings" element={<><Navbar isAuthenticated={true}/><BookingsPage/><Footer/></>}/>
           <Route path="/chatbot" element={<><Navbar isAuthenticated={false} /><Chatbot /></>} />
           <Route path= "/show-appointments" element={<><Navbar isAuthenticated={true} /><AppointmentList /></>} />

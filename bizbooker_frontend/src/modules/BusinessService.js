@@ -69,7 +69,7 @@ const BusinessService = () => {
 
   const fetchBusinessHours = async (locationId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/business-hours/${locationId}/weekly`, {
+      const response = await fetch(`${API_BASE_URL}/api/business-hours/${businessId}/weekly`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -289,7 +289,7 @@ const BusinessService = () => {
             endTime: `${selectedDate}T${selectedSlot.end}:00`,
             configId: selectedSlot.intervalData.configId,
             userSelectedCount: selectedSlot.selectedCount || 1,
-            slotPrice: selectedSlot.price || 0,
+            slotPrice: selectedSlot.price*selectedSlot.selectedCount || 0,
             notes: ""
           };
 

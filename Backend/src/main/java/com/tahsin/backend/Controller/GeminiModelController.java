@@ -20,6 +20,7 @@ import com.tahsin.backend.Repository.ServiceCategoryRepository;
 import com.tahsin.backend.Repository.SlotIntervalRepository;
 import com.tahsin.backend.Service.AIConversationService;
 import com.tahsin.backend.Service.AIMessageService;
+import com.tahsin.backend.Service.NotificationService;
 import com.tahsin.backend.Service.ReviewService;
 
 import org.aspectj.weaver.patterns.ConcreteCflowPointcut.Slot;
@@ -58,6 +59,8 @@ public class GeminiModelController {
     private final AIConversationService conversationService;
     private final BusinessRepository businessRepository;
     private final SlotIntervalRepository slotIntervalRepository;
+    @Autowired
+    private NotificationService notificationService;
     @Autowired
     private ServiceCategoryRepository serviceCategoryRepository;
     @Autowired
@@ -935,9 +938,14 @@ public class GeminiModelController {
             System.out.println(slotInterval.getConfiguration().getId());
             slotIntervalRepository.save(slotInterval);
             appointment.setCustomer(conversationService.getConversationById(conversationId).getUser());
+            appointment.setSlotPrice(slotInterval.getPrice()*slotsToBook);
 
             appointmentRepository.save(appointment);
-            return "Successfully booked " + slotsToBook + " slot(s) at ";
+            notificationService.addNotification(
+                "You have booked "+slotsToBook+" slots for 1 hour period.you need to pay the money to confirm the booking or else it will be cancelled",
+                conversationService.getConversationById(conversationId).getUser().getId(),appointment.getId(), "Complete Payment", business.getBusinessName());
+            
+            return "Successfully booked " + slotsToBook + " slot(s) at "+business.getBusinessName()+" .Pay the money to confirm or else it will be cancelled.Check 'Bookings' in your dashboard to find the bookings and complete payment";
         }
 
     }

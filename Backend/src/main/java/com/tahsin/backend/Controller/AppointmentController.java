@@ -511,7 +511,7 @@ public ResponseEntity<?> createPendingAppointment(@RequestBody AppointmentDTO ap
         appointment.setStartTime(appointmentDTO.getStartTime());
         appointment.setEndTime(appointmentDTO.getEndTime());
         appointment.setStatus(AppointmentStatus.PENDING);
-        appointment.setSlotPrice(slotPrice);
+        appointment.setSlotPrice(slotPrice*appointmentDTO.getUserSelectedCount());
 
         // Set optional notes if provided
         if (appointmentDTO.getNotes() != null) {

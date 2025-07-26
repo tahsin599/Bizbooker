@@ -91,7 +91,7 @@ public class BusinessService {
         Business savedBusiness = businessRepository.save(business);
         notificationService.addNotification(
                 "Your Business Creation request has been submitted. We will check your request and let you know our feedbacks and you will be notified if your business gets approved",
-                userId, "Business Creation", business.getBusinessName());
+                userId,0L, "Business Creation", business.getBusinessName());
 
         return savedBusiness;
     }

@@ -78,6 +78,7 @@ public class AppointmentCompletionService {
             // Add any additional completion logic here
         });
         
+        
         appointmentRepository.saveAll(appointments);
         
         if (!appointments.isEmpty()) {
