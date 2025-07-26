@@ -86,7 +86,7 @@ package com.tahsin.backend.dto;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class AppointmentDto {
+public class AppointmentDTO {
     private Long customerId;
     private Long businessId;
     private Long locationId;

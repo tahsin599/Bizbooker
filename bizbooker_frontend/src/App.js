@@ -33,6 +33,8 @@ import BookingPaymentSuccess from './modules/BookingPaymentSuccess';
 import StripeConnectDashboard from './modules/StripeConnectDashboard';
 import StripeOnboardingComplete from './modules/StripeOnboardingComplete';
 import StripeOnboarding from './modules/StripeOnboarding';
+import BusinessNotifications from './modules/BusinessNotifications';
+import UserProfilePage from './modules/UserProfilePage';
 
 function App() {
   return (
@@ -57,7 +59,7 @@ function App() {
           <Route path="/business/category/:categoryId" element={<><Navbar /><CategoryBusinessListingPage /><Footer /></>} />
           <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
           <Route path="/business/config/:businessId" element={<><BusinessConfig /></>} /> 
-          <Route path="/bookings" element={<><BookingsPage/></>}/>
+          <Route path="/bookings" element={<><Navbar isAuthenticated={true}/><BookingsPage/><Footer/></>}/>
           <Route path="/chatbot" element={<><Navbar isAuthenticated={false} /><Chatbot /></>} />
           <Route path= "/show-appointments" element={<><Navbar isAuthenticated={true} /><AppointmentList /></>} />
           <Route path="/business/reviews" element={<><Navbar isAuthenticated={true} /><BusinessReviewsPage /></>} />
@@ -72,6 +74,8 @@ function App() {
           <Route path="/stripe-onboarding/:businessId" element={<StripeOnboarding />} />
 
           <Route path="/stripe-onboarding-complete/:businessId" element={<StripeOnboardingComplete />} />
+          <Route path="/notifications" element={<><Navbar isAuthenticated={true} /><BusinessNotifications /><Footer /></>}/>
+          <Route path="/profile" element={<><Navbar isAuthenticated={true} /><UserProfilePage /><Footer /></>}/>
 
           {/* Add more routes as needed */}
         </Routes>

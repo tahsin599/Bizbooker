@@ -183,6 +183,8 @@ public class AppointmentController {
 
     @Autowired
     private com.tahsin.backend.Repository.PaymentRepository paymentRepository;
+    @Autowired
+    private ReviewService reviewService;
 
     @PostMapping
     public ResponseEntity<?> createAppointment(@RequestBody AppointmentDTO appointmentDTO) {
@@ -371,6 +373,12 @@ public ResponseEntity<Page<AppointmentResponseDTO>> getUserAppointments(
     // Convert Page<Appointment> to Page<AppointmentResponseDTO>
     Page<AppointmentResponseDTO> responseDTOs = appointments.map(appointment -> {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
+          Review existingReview = reviewService.findByAppointmentId(appointment.getId());
+        if(existingReview != null) {
+            dto.setReviewGiven(true);
+        } else {
+            dto.setReviewGiven(false);
+        }
         dto.setAppointmentId(appointment.getId());
         dto.setStatus(appointment.getStatus().toString());
         

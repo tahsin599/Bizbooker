@@ -117,6 +117,17 @@ public class AppointmentResponseDTO {
     private Double slotPrice;       // Price of the booked slot
     private Long businessId;        // Business ID for navigation
     private String locationAddress; // Full address for display
+    private boolean isReviewGiven;
+    
+
+
+    public boolean isReviewGiven() {
+        return isReviewGiven;
+    }
+
+    public void setReviewGiven(boolean isReviewGiven) {
+        this.isReviewGiven = isReviewGiven;
+    }
 
     // Constructors
     public AppointmentResponseDTO() {

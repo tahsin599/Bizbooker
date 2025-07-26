@@ -1,11 +1,12 @@
-.stripe-onboarding-container {
+/* Stripe Onboarding Page Styles */
+.stripe-onboarding {
   max-width: 800px;
   margin: 0 auto;
   padding: 40px 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.stripe-onboarding-content h1 {
+.stripe-onboarding__title {
   text-align: center;
   color: #1a1a1a;
   margin-bottom: 40px;
@@ -13,12 +14,12 @@
   font-weight: 700;
 }
 
-.stripe-status {
+.stripe-onboarding__status {
   display: flex;
   justify-content: center;
 }
 
-.status-card {
+.stripe-onboarding__card {
   background: white;
   border-radius: 12px;
   padding: 40px;
@@ -27,31 +28,31 @@
   width: 100%;
 }
 
-.status-card h3 {
+.stripe-onboarding__card-title {
   color: #1a1a1a;
   font-size: 1.5rem;
   margin-bottom: 20px;
   font-weight: 600;
 }
 
-.status-card p {
+.stripe-onboarding__card-text {
   color: #666;
   line-height: 1.6;
   margin-bottom: 20px;
 }
 
-.status-card ul {
+.stripe-onboarding__card-list {
   color: #666;
   margin: 20px 0;
   padding-left: 20px;
 }
 
-.status-card li {
+.stripe-onboarding__card-item {
   margin-bottom: 8px;
   line-height: 1.5;
 }
 
-.setup-button, .continue-button, .dashboard-button {
+.stripe-onboarding__btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
@@ -65,22 +66,22 @@
   margin-top: 20px;
 }
 
-.setup-button:hover, .continue-button:hover, .dashboard-button:hover {
+.stripe-onboarding__btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.setup-button:disabled, .continue-button:disabled {
+.stripe-onboarding__btn--disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
 }
 
-.status-items {
+.stripe-onboarding__status-items {
   margin: 30px 0;
 }
 
-.status-item {
+.stripe-onboarding__status-item {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
@@ -90,43 +91,44 @@
   background: #f9f9f9;
 }
 
-.status-item.completed {
+.stripe-onboarding__status-item--completed {
   border-left-color: #4caf50;
   background: #f1f8e9;
 }
 
-.status-item.pending {
+.stripe-onboarding__status-item--pending {
   border-left-color: #ff9800;
   background: #fff3e0;
 }
 
-.status-icon {
+.stripe-onboarding__status-icon {
   margin-right: 12px;
   font-size: 1.2rem;
 }
 
-.action-section, .success-section {
+.stripe-onboarding__action-section,
+.stripe-onboarding__success-section {
   margin-top: 30px;
   padding-top: 20px;
   border-top: 1px solid #e0e0e0;
 }
 
-.success-section {
+.stripe-onboarding__success-section {
   text-align: center;
 }
 
-.success-section p {
+.stripe-onboarding__success-text {
   color: #4caf50;
   font-weight: 600;
   font-size: 1.1rem;
 }
 
-.loading-container {
+.stripe-onboarding__loading {
   text-align: center;
   padding: 60px 20px;
 }
 
-.loading-spinner {
+.stripe-onboarding__spinner {
   border: 4px solid #f3f3f3;
   border-top: 4px solid #667eea;
   border-radius: 50%;
@@ -141,7 +143,7 @@
   100% { transform: rotate(360deg); }
 }
 
-.error-message {
+.stripe-onboarding__error {
   background: #ffebee;
   border: 1px solid #f44336;
   border-radius: 8px;
@@ -150,7 +152,7 @@
   color: #d32f2f;
 }
 
-.error-message button {
+.stripe-onboarding__error-btn {
   background: #f44336;
   color: white;
   border: none;
@@ -161,15 +163,15 @@
 }
 
 @media (max-width: 768px) {
-  .stripe-onboarding-container {
+  .stripe-onboarding {
     padding: 20px 15px;
   }
   
-  .stripe-onboarding-content h1 {
+  .stripe-onboarding__title {
     font-size: 2rem;
   }
   
-  .status-card {
+  .stripe-onboarding__card {
     padding: 30px 20px;
   }
 }

@@ -10,6 +10,8 @@ import './BusinessService.css';
 import { Modal } from 'antd';
 import message from 'antd/lib/message';
 import axios from 'axios';
+import BusinessReviewsTab from './BusinessReviewsTab';
+import LocationSelectMap from './LocationSelectMap';
 // Stripe Checkout integration
 
 const BusinessService = () => {
@@ -512,6 +514,12 @@ const BusinessService = () => {
         >
           Locations
         </button>
+         <button
+          className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reviews')}
+        >
+          Reviews
+        </button>
       </div>
 
       {/* Main Content */}
@@ -751,51 +759,62 @@ const BusinessService = () => {
               )}
             </div>
           </div>
-        ) : (
-          /* Locations Tab */
-          <div className="locations-section">
-            <h3>Our Locations</h3>
-            <div className="locations-grid">
-              {business.locations?.map((location, index) => (
-                <div key={index} className="location-card">
-                  <div className="location-header">
-                    <h4>
-                      <MapPin size={16} /> Location {index + 1}
-                      {location.isPrimary && <span className="primary-badge">Primary</span>}
-                    </h4>
-                  </div>
-                  <div className="location-info">
-                    <div className="info-row">
-                      <span>Address:</span>
-                      <p>{location.address}, {location.area}, {location.city}</p>
-                    </div>
-                    <div className="info-row">
-                      <span>Postal Code:</span>
-                      <p>{location.postalCode}</p>
-                    </div>
-                    <div className="info-row">
-                      <span>Contact:</span>
-                      <p>{location.contactPhone}</p>
-                    </div>
-                    <div className="info-row">
-                      <span>Email:</span>
-                      <p>{location.contactEmail}</p>
-                    </div>
-                  </div>
-                  <button
-                    className="view-schedule-btn"
-                    onClick={() => {
-                      setActiveTab('services');
-                      handleLocationSelect(location);
-                    }}
-                  >
-                    <HoursIcon size={16} /> View Schedule
-                  </button>
-                </div>
-              ))}
+        ) :activeTab === 'locations' ?(
+  /* Locations Tab */
+  <div className="locations-section">
+    <h3>Our Locations</h3>
+    
+    {/* Add the map component here */}
+    <div className="locations-map-container">
+      <LocationSelectMap locations={business.locations} />
+    </div>
+    
+    <div className="locations-grid">
+      {business.locations?.map((location, index) => (
+        <div key={index} className="location-card">
+          <div className="location-header">
+            <h4>
+              <MapPin size={16} /> Location {index + 1}
+              {location.isPrimary && <span className="primary-badge">Primary</span>}
+            </h4>
+          </div>
+          <div className="location-info">
+            <div className="info-row">
+              <span>Address:</span>
+              <p>{location.address}, {location.area}, {location.city}</p>
+            </div>
+            <div className="info-row">
+              <span>Postal Code:</span>
+              <p>{location.postalCode}</p>
+            </div>
+            <div className="info-row">
+              <span>Contact:</span>
+              <p>{location.contactPhone}</p>
+            </div>
+            <div className="info-row">
+              <span>Email:</span>
+              <p>{location.contactEmail}</p>
             </div>
           </div>
-        )}
+          <button
+            className="view-schedule-btn"
+            onClick={() => {
+              setActiveTab('services');
+              handleLocationSelect(location);
+            }}
+          >
+            <HoursIcon size={16} /> View Schedule
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+): (
+    /* Reviews Tab */
+    <div className="reviews-section">
+      <BusinessReviewsTab businessId={businessId} />
+    </div>
+  )}
       </div>
     </div>
   );

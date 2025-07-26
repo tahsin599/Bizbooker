@@ -55,7 +55,6 @@ const StripeConnectDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // After creating account, we need to create onboarding link
         await createOnboardingLink();
       } else {
         setError('Failed to create Stripe account');
@@ -119,11 +118,11 @@ const StripeConnectDashboard = () => {
 
   if (loading) {
     return (
-      <div className="stripe-dashboard">
+      <div className="stripe-connect">
         <Navbar />
-        <div className="dashboard-container">
-          <div className="loading-state">
-            <div className="spinner"></div>
+        <div className="stripe-connect__container">
+          <div className="stripe-connect__loading">
+            <div className="stripe-connect__spinner"></div>
             <p>Loading payment settings...</p>
           </div>
         </div>
@@ -132,26 +131,26 @@ const StripeConnectDashboard = () => {
   }
 
   return (
-    <div className="stripe-dashboard">
+    <div className="stripe-connect">
       <Navbar />
-      <div className="dashboard-container">
-        <div className="dashboard-header">
+      <div className="stripe-connect__container">
+        <div className="stripe-connect__header">
           <h2>Payment Settings</h2>
           <p>Manage your payment account and view earnings</p>
         </div>
 
         {error && (
-          <div className="error-message">
+          <div className="stripe-connect__error">
             <p>{error}</p>
-            <button onClick={() => setError('')} className="btn-clear">
+            <button onClick={() => setError('')} className="stripe-connect__btn-clear">
               Dismiss
             </button>
           </div>
         )}
 
         {!accountStatus?.accountExists ? (
-          <div className="no-account-state">
-            <div className="icon-container">
+          <div className="stripe-connect__state stripe-connect__state--no-account">
+            <div className="stripe-connect__icon">
               <CreditCard size={64} />
             </div>
             <h3>Set Up Payments</h3>
@@ -159,89 +158,89 @@ const StripeConnectDashboard = () => {
               Set up your payment account to start receiving money from customer bookings.
               We use Stripe to ensure secure and fast transfers to your bank account.
             </p>
-            <button onClick={startOnboarding} className="btn-primary">
+            <button onClick={startOnboarding} className="stripe-connect__btn stripe-connect__btn--primary">
               Set Up Payment Account
             </button>
           </div>
         ) : !accountStatus.onboardingComplete ? (
-          <div className="incomplete-onboarding">
-            <div className="status-indicator warning">
+          <div className="stripe-connect__state stripe-connect__state--incomplete">
+            <div className="stripe-connect__status-indicator stripe-connect__status-indicator--warning">
               <AlertCircle size={24} />
             </div>
             <h3>Complete Payment Setup</h3>
             <p>Your payment account is created but setup isn't complete.</p>
             
-            <div className="status-details">
-              <div className="status-item">
-                <span className={`status-dot ${accountStatus.chargesEnabled ? 'success' : 'warning'}`}></span>
+            <div className="stripe-connect__status-details">
+              <div className="stripe-connect__status-item">
+                <span className={`stripe-connect__status-dot ${accountStatus.chargesEnabled ? 'stripe-connect__status-dot--success' : 'stripe-connect__status-dot--warning'}`}></span>
                 <span>Accept Payments: {accountStatus.chargesEnabled ? 'Enabled' : 'Pending'}</span>
               </div>
-              <div className="status-item">
-                <span className={`status-dot ${accountStatus.payoutsEnabled ? 'success' : 'warning'}`}></span>
+              <div className="stripe-connect__status-item">
+                <span className={`stripe-connect__status-dot ${accountStatus.payoutsEnabled ? 'stripe-connect__status-dot--success' : 'stripe-connect__status-dot--warning'}`}></span>
                 <span>Receive Payouts: {accountStatus.payoutsEnabled ? 'Enabled' : 'Pending'}</span>
               </div>
             </div>
 
-            <button onClick={startOnboarding} className="btn-primary">
+            <button onClick={startOnboarding} className="stripe-connect__btn stripe-connect__btn--primary">
               Complete Setup
             </button>
           </div>
         ) : (
-          <div className="account-active">
-            <div className="status-indicator success">
+          <div className="stripe-connect__state stripe-connect__state--active">
+            <div className="stripe-connect__status-indicator stripe-connect__status-indicator--success">
               <CheckCircle size={24} />
             </div>
             <h3>Payment Account Active</h3>
             <p>Your payment account is fully set up and ready to receive payments.</p>
 
-            <div className="account-info">
-              <div className="info-grid">
-                <div className="info-item">
+            <div className="stripe-connect__account-info">
+              <div className="stripe-connect__info-grid">
+                <div className="stripe-connect__info-item">
                   <h4>Platform Fee</h4>
-                  <p className="fee-percentage">{accountStatus.platformFeePercentage || 5}%</p>
+                  <p className="stripe-connect__fee">{accountStatus.platformFeePercentage || 5}%</p>
                   <small>per transaction</small>
                 </div>
-                <div className="info-item">
+                <div className="stripe-connect__info-item">
                   <h4>Your Earnings</h4>
-                  <p className="earnings-percentage">{100 - (accountStatus.platformFeePercentage || 5)}%</p>
+                  <p className="stripe-connect__earnings">{100 - (accountStatus.platformFeePercentage || 5)}%</p>
                   <small>per transaction</small>
                 </div>
-                <div className="info-item">
+                <div className="stripe-connect__info-item">
                   <h4>Payout Schedule</h4>
                   <p>Daily</p>
                   <small>for eligible transactions</small>
                 </div>
-                <div className="info-item">
+                <div className="stripe-connect__info-item">
                   <h4>Account Status</h4>
-                  <p className="status-active">Active</p>
+                  <p className="stripe-connect__status-text">Active</p>
                   <small>charges and payouts enabled</small>
                 </div>
               </div>
             </div>
 
-            <div className="dashboard-actions">
+            <div className="stripe-connect__actions">
               <button 
                 onClick={openStripeDashboard} 
                 disabled={dashboardLoading}
-                className="btn-primary"
+                className="stripe-connect__btn stripe-connect__btn--primary"
               >
                 {dashboardLoading ? 'Opening...' : 'View Stripe Dashboard'}
               </button>
               <button 
                 onClick={() => navigate(`/business/${businessId}`)}
-                className="btn-secondary"
+                className="stripe-connect__btn stripe-connect__btn--secondary"
               >
                 Back to Business
               </button>
             </div>
 
-            <div className="help-section">
+            <div className="stripe-connect__help">
               <h4>Payment Information</h4>
-              <ul>
-                <li>Payments are processed automatically when customers book appointments</li>
-                <li>Funds are transferred to your bank account according to Stripe's payout schedule</li>
-                <li>You can view detailed payment history in your Stripe dashboard</li>
-                <li>Platform fees are deducted automatically before payouts</li>
+              <ul className="stripe-connect__help-list">
+                <li className="stripe-connect__help-item">Payments are processed automatically when customers book appointments</li>
+                <li className="stripe-connect__help-item">Funds are transferred to your bank account according to Stripe's payout schedule</li>
+                <li className="stripe-connect__help-item">You can view detailed payment history in your Stripe dashboard</li>
+                <li className="stripe-connect__help-item">Platform fees are deducted automatically before payouts</li>
               </ul>
             </div>
           </div>

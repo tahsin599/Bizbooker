@@ -87,4 +87,19 @@ public class UserService {
                 user.getRole().name()
         );
     }
+
+       public UserProfileDTO updateUserProfile(UserProfileDTO userProfileDTO,Long id) throws Exception {
+        User user=repo.findById(id).orElse(null);
+        if(user==null){
+            throw new Exception();
+
+        }
+        user.setBio(userProfileDTO.getBio());
+        user.setName(userProfileDTO.getName());
+        repo.save(user);
+        return userProfileDTO;
+        
+        // TODO Auto-generated method stub
+        
+    }
 }

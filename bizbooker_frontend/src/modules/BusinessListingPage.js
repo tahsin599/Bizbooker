@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, MapPin, Filter, ChevronRight } from 'lucide-react';
+import { Briefcase, MapPin, Filter, ChevronRight, Star } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 import './BusinessListingPage.css';
-import { API_BASE_URL } from '../config/api';   
 
 const BusinessListingPage = () => {
     const [businesses, setBusinesses] = useState([]);
@@ -20,16 +20,12 @@ const BusinessListingPage = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
 
-    // Enhanced image handling function
     const getImageUrl = (imageData, imageType) => {
         if (!imageData) return null;
-        
         try {
-            // Handle both string (base64) and ArrayBuffer formats
             const base64String = typeof imageData === 'string' 
                 ? imageData 
                 : arrayBufferToBase64(imageData);
-            
             return `data:${imageType || 'image/jpeg'};base64,${base64String}`;
         } catch (error) {
             console.error('Error processing image:', error);
@@ -37,7 +33,6 @@ const BusinessListingPage = () => {
         }
     };
 
-    // Convert ArrayBuffer to base64 string
     const arrayBufferToBase64 = (buffer) => {
         if (!buffer) return '';
         const bytes = new Uint8Array(buffer);
@@ -48,7 +43,6 @@ const BusinessListingPage = () => {
         return window.btoa(binary);
     };
 
-    // Fetch initial random businesses
     useEffect(() => {
         const fetchRandomBusinesses = async () => {
             try {
@@ -58,7 +52,6 @@ const BusinessListingPage = () => {
                     }
                 });
                 const data = await response.json();
-                console.log(data);
                 setBusinesses(data);
             } catch (err) {
                 setError(err.message);
@@ -68,12 +61,9 @@ const BusinessListingPage = () => {
         fetchRandomBusinesses();
     }, [token]);
 
-    // Fetch categories and areas
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                // Fetch categories
-              
                 const categoriesResponse = await fetch(`${API_BASE_URL}/api/customer/businesses/categories`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -82,7 +72,6 @@ const BusinessListingPage = () => {
                 const categoriesData = await categoriesResponse.json();
                 setCategories(categoriesData);
 
-                // Extract unique areas from businesses
                 const areasSet = new Set();
                 businesses.forEach(business => {
                     business.locations?.forEach(location => {
@@ -98,9 +87,8 @@ const BusinessListingPage = () => {
         };
 
         fetchFilters();
-    }, [token,businesses]);
+    }, [token, businesses]);
 
-    // Fetch more businesses when scrolling or filters change
     const fetchBusinesses = useCallback(async () => {
         if (loading || !hasMore) return;
 
@@ -116,7 +104,6 @@ const BusinessListingPage = () => {
                 }
             });
             const data = await response.json();
-            console.log('Fetched businesses:', data);
             
             if (page === 0) {
                 setBusinesses(data.content);
@@ -133,7 +120,6 @@ const BusinessListingPage = () => {
         }
     }, [page, filters, loading, hasMore, token]);
 
-    // Infinite scroll observer
     const lastBusinessRef = useCallback(node => {
         if (loading) return;
         if (observer.current) observer.current.disconnect();
@@ -147,7 +133,6 @@ const BusinessListingPage = () => {
         if (node) observer.current.observe(node);
     }, [loading, hasMore, fetchBusinesses]);
 
-    // Handle filter changes
     const handleFilterChange = (filterType, value) => {
         setFilters(prev => ({
             ...prev,
@@ -157,14 +142,9 @@ const BusinessListingPage = () => {
         setHasMore(true);
     };
 
-    // Load more when filters change
-    useEffect(() => {
-        fetchBusinesses();
-    }, [filters]);
-
     if (error) {
         return (
-            <div className="error-container">
+            <div className="business-listing-error">
                 <h2>Error loading businesses</h2>
                 <p>{error}</p>
                 <button onClick={() => window.location.reload()}>Try Again</button>
@@ -173,116 +153,150 @@ const BusinessListingPage = () => {
     }
 
     return (
-        <div className="business-listing-container">
-            {/* Filter Section */}
-            <div className="filter-section">
-                <div className="filter-group">
-                    <Filter size={18} />
-                    <select 
-                        value={filters.category || ''}
-                        onChange={(e) => handleFilterChange('category', e.target.value || null)}
-                    >
-                        <option value="">All Categories</option>
-                        {categories.map(category => (
-                            <option key={category.id} value={category.id}>
-                                {category.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                
-                <div className="filter-group">
-                    <MapPin size={18} />
-                    <select 
-                        value={filters.area || ''}
-                        onChange={(e) => handleFilterChange('area', e.target.value || null)}
-                    >
-                        <option value="">All Areas</option>
-                        {areas.map((area, index) => (
-                            <option key={index} value={area}>
-                                {area}
-                            </option>
-                        ))}
-                    </select>
+        <div className="business-listing-page">
+            {/* Top spacing for navbar */}
+            <div className="business-listing-spacer"></div>
+
+            {/* Hero Section */}
+            <div className="business-listing-hero">
+                <div className="business-listing-hero-content">
+                    <h1>Discover Local Businesses</h1>
+                    <p>Find and book services from trusted providers in your area</p>
                 </div>
             </div>
 
-            {/* Business Grid */}
-            <div className="businesses-grid">
-                {businesses.map((business, index) => {
-                    const imageUrl = getImageUrl(business.imageData, business.imageType);
-                    const primaryLocation = business.locations?.find(loc => loc.isPrimary) || 
-                                         business.locations?.[0];
-                    
-                    return (
-                        <div 
-                            key={`${business.id}-${index}`}
-                            className="business-card"
-                            ref={index === businesses.length - 1 ? lastBusinessRef : null}
+            <div className="business-listing-main">
+                {/* Filter Section */}
+                <div className="business-filters">
+                    <div className="business-filter-group">
+                        <Filter size={18} />
+                        <select 
+                            value={filters.category || ''}
+                            onChange={(e) => handleFilterChange('category', e.target.value || null)}
                         >
-                            <div className="business-image">
-                                {imageUrl ? (
-                                    <img 
-                                        src={imageUrl}
-                                        alt={business.businessName}
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.parentElement.innerHTML = `
-                                                <div class="image-placeholder">
-                                                    <Briefcase size={40} />
-                                                </div>
-                                            `;
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="image-placeholder">
-                                        <Briefcase size={40} />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="business-info">
-                                <h3>{business.businessName}</h3>
-                                <p className="category">{business.categoryName}</p>
-                                {primaryLocation && (
-                                    <div className="location">
-                                        <MapPin size={14} />
-                                        <span>{primaryLocation.area}, {primaryLocation.city}</span>
-                                    </div>
-                                )}
-                                <div className="business-status">
-                                    <span className={`status-badge ${business.approvalStatus?.toLowerCase()}`}>
-                                        {business.approvalStatus}
-                                    </span>
-                                </div>
-                                <button 
-                                    className="view-button"
-                                    onClick={() => navigate(`/business/customer/${business.id}`)}
-                                >
-                                    View Details <ChevronRight size={14} />
-                                </button>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Loading Indicator */}
-            {loading && (
-                <div className="loading-indicator">
-                    <div className="spinner"></div>
-                    <p>Loading more businesses...</p>
+                            <option value="">All Categories</option>
+                            {categories.map(category => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    
+                    <div className="business-filter-group">
+                        <MapPin size={18} />
+                        <select 
+                            value={filters.area || ''}
+                            onChange={(e) => handleFilterChange('area', e.target.value || null)}
+                        >
+                            <option value="">All Areas</option>
+                            {areas.map((area, index) => (
+                                <option key={index} value={area}>
+                                    {area}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-            )}
 
-            {/* Load More Button (alternative to infinite scroll) */}
-            {!loading && hasMore && (
-                <button 
-                    className="load-more-btn"
-                    onClick={fetchBusinesses}
-                >
-                    Load More Businesses
-                </button>
-            )}
+                {/* Business Grid */}
+                <div className="business-grid">
+                    {businesses.map((business, index) => {
+                        const imageUrl = getImageUrl(business.imageData, business.imageType);
+                        const primaryLocation = business.locations?.find(loc => loc.isPrimary) || 
+                                             business.locations?.[0];
+                        const rating = business.averageRating || 0;
+                        
+                        return (
+                            <div 
+                                key={`${business.id}-${index}`}
+                                className="business-card"
+                                ref={index === businesses.length - 1 ? lastBusinessRef : null}
+                                onClick={() => navigate(`/business/customer/${business.id}`)}
+                            >
+                                <div className="business-card-image">
+                                    {imageUrl ? (
+                                        <img 
+                                            src={imageUrl}
+                                            alt={business.businessName}
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.parentElement.innerHTML = `
+                                                    <div class="business-card-image-placeholder">
+                                                        <Briefcase size={40} />
+                                                    </div>
+                                                `;
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="business-card-image-placeholder">
+                                            <Briefcase size={40} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="business-card-content">
+                                    <h3>{business.businessName}</h3>
+                                    <p className="business-card-category">{business.categoryName}</p>
+                                    
+                                    <div className="business-card-rating">
+                                        <Star size={14} fill="#FFD700" color="#FFD700" />
+                                        <span>{rating.toFixed(1)}</span>
+                                    </div>
+                                    
+                                    {primaryLocation && (
+                                        <div className="business-card-location">
+                                            <MapPin size={14} />
+                                            <span>{primaryLocation.area}, {primaryLocation.city}</span>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="business-card-status">
+                                        <span className={`business-status-badge ${business.approvalStatus?.toLowerCase()}`}>
+                                            {business.approvalStatus || 'PENDING'}
+                                        </span>
+                                    </div>
+                                    
+                                    <button 
+                                        className="business-card-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/business/customer/${business.id}`);
+                                        }}
+                                    >
+                                        View Details <ChevronRight size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Loading Indicator */}
+                {loading && (
+                    <div className="business-listing-loading">
+                        <div className="business-loading-spinner"></div>
+                        <p>Loading more businesses...</p>
+                    </div>
+                )}
+
+                {/* No Results Message */}
+                {!loading && businesses.length === 0 && (
+                    <div className="business-no-results">
+                        <h3>No businesses found</h3>
+                        <p>Try adjusting your filters</p>
+                    </div>
+                )}
+
+                {/* Load More Button */}
+                {!loading && hasMore && businesses.length > 0 && (
+                    <button 
+                        className="business-load-more"
+                        onClick={fetchBusinesses}
+                    >
+                        Load More Businesses
+                    </button>
+                )}
+            </div>
         </div>
     );
 };

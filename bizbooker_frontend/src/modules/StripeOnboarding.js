@@ -57,7 +57,6 @@ const StripeOnboarding = () => {
         throw new Error(errorText);
       }
 
-      // Refresh account status
       await checkAccountStatus();
     } catch (error) {
       console.error('Error creating Stripe account:', error);
@@ -72,7 +71,6 @@ const StripeOnboarding = () => {
       setLoading(true);
       setError(null);
 
-      // If no Stripe account exists, create one first
       if (!accountStatus?.hasStripeAccount) {
         await createStripeAccount();
       }
@@ -91,8 +89,6 @@ const StripeOnboarding = () => {
       }
 
       const data = await response.json();
-      
-      // Redirect to Stripe onboarding
       window.location.href = data.url;
     } catch (error) {
       console.error('Error starting onboarding:', error);
@@ -107,18 +103,18 @@ const StripeOnboarding = () => {
 
     if (!accountStatus.hasStripeAccount) {
       return (
-        <div className="stripe-status">
-          <div className="status-card">
-            <h3>Payment Setup Required</h3>
-            <p>To receive payments from customers, you need to set up a Stripe account.</p>
-            <ul>
-              <li>✓ Secure payment processing</li>
-              <li>✓ Direct deposits to your bank account</li>
-              <li>✓ Real-time payment tracking</li>
-              <li>✓ Automatic tax reporting</li>
+        <div className="stripe-onboarding__status">
+          <div className="stripe-onboarding__card">
+            <h3 className="stripe-onboarding__card-title">Payment Setup Required</h3>
+            <p className="stripe-onboarding__card-text">To receive payments from customers, you need to set up a Stripe account.</p>
+            <ul className="stripe-onboarding__card-list">
+              <li className="stripe-onboarding__card-item">✓ Secure payment processing</li>
+              <li className="stripe-onboarding__card-item">✓ Direct deposits to your bank account</li>
+              <li className="stripe-onboarding__card-item">✓ Real-time payment tracking</li>
+              <li className="stripe-onboarding__card-item">✓ Automatic tax reporting</li>
             </ul>
             <button 
-              className="setup-button"
+              className={`stripe-onboarding__btn ${loading ? 'stripe-onboarding__btn--disabled' : ''}`}
               onClick={startOnboarding}
               disabled={loading}
             >
@@ -130,26 +126,26 @@ const StripeOnboarding = () => {
     }
 
     return (
-      <div className="stripe-status">
-        <div className="status-card">
-          <h3>Payment Account Status</h3>
-          <div className="status-items">
-            <div className={`status-item ${accountStatus.onboardingCompleted ? 'completed' : 'pending'}`}>
-              <span className="status-icon">
+      <div className="stripe-onboarding__status">
+        <div className="stripe-onboarding__card">
+          <h3 className="stripe-onboarding__card-title">Payment Account Status</h3>
+          <div className="stripe-onboarding__status-items">
+            <div className={`stripe-onboarding__status-item ${accountStatus.onboardingCompleted ? 'stripe-onboarding__status-item--completed' : 'stripe-onboarding__status-item--pending'}`}>
+              <span className="stripe-onboarding__status-icon">
                 {accountStatus.onboardingCompleted ? '✅' : '🔄'}
               </span>
               <span>Account Setup: {accountStatus.onboardingCompleted ? 'Complete' : 'Pending'}</span>
             </div>
             
-            <div className={`status-item ${accountStatus.chargesEnabled ? 'completed' : 'pending'}`}>
-              <span className="status-icon">
+            <div className={`stripe-onboarding__status-item ${accountStatus.chargesEnabled ? 'stripe-onboarding__status-item--completed' : 'stripe-onboarding__status-item--pending'}`}>
+              <span className="stripe-onboarding__status-icon">
                 {accountStatus.chargesEnabled ? '✅' : '🔄'}
               </span>
               <span>Receiving Payments: {accountStatus.chargesEnabled ? 'Enabled' : 'Pending'}</span>
             </div>
             
-            <div className={`status-item ${accountStatus.payoutsEnabled ? 'completed' : 'pending'}`}>
-              <span className="status-icon">
+            <div className={`stripe-onboarding__status-item ${accountStatus.payoutsEnabled ? 'stripe-onboarding__status-item--completed' : 'stripe-onboarding__status-item--pending'}`}>
+              <span className="stripe-onboarding__status-icon">
                 {accountStatus.payoutsEnabled ? '✅' : '🔄'}
               </span>
               <span>Bank Transfers: {accountStatus.payoutsEnabled ? 'Enabled' : 'Pending'}</span>
@@ -157,10 +153,10 @@ const StripeOnboarding = () => {
           </div>
 
           {!accountStatus.onboardingCompleted && (
-            <div className="action-section">
-              <p>Complete your account setup to start receiving payments.</p>
+            <div className="stripe-onboarding__action-section">
+              <p className="stripe-onboarding__card-text">Complete your account setup to start receiving payments.</p>
               <button 
-                className="continue-button"
+                className={`stripe-onboarding__btn ${loading ? 'stripe-onboarding__btn--disabled' : ''}`}
                 onClick={startOnboarding}
                 disabled={loading}
               >
@@ -170,10 +166,10 @@ const StripeOnboarding = () => {
           )}
 
           {accountStatus.onboardingCompleted && accountStatus.chargesEnabled && (
-            <div className="success-section">
-              <p>🎉 Your payment account is fully set up! You can now receive payments from customers.</p>
+            <div className="stripe-onboarding__success-section">
+              <p className="stripe-onboarding__success-text">🎉 Your payment account is fully set up! You can now receive payments from customers.</p>
               <button 
-                className="dashboard-button"
+                className="stripe-onboarding__btn"
                 onClick={() => navigate(`/business-config/${businessId}`)}
               >
                 Back to Business Settings
@@ -187,22 +183,22 @@ const StripeOnboarding = () => {
 
   if (loading && !accountStatus) {
     return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
+      <div className="stripe-onboarding__loading">
+        <div className="stripe-onboarding__spinner"></div>
         <p>Loading payment setup...</p>
       </div>
     );
   }
 
   return (
-    <div className="stripe-onboarding-container">
-      <div className="stripe-onboarding-content">
-        <h1>Payment Setup</h1>
+    <div className="stripe-onboarding">
+      <div className="stripe-onboarding__content">
+        <h1 className="stripe-onboarding__title">Payment Setup</h1>
         
         {error && (
-          <div className="error-message">
+          <div className="stripe-onboarding__error">
             <p>Error: {error}</p>
-            <button onClick={() => setError(null)}>Dismiss</button>
+            <button className="stripe-onboarding__error-btn" onClick={() => setError(null)}>Dismiss</button>
           </div>
         )}
 

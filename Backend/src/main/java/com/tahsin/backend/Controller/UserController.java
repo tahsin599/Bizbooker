@@ -45,9 +45,13 @@ public class UserController {
         return ResponseEntity.ok(new UserProfileResponse(userProfile, notificationDtos));
     }
 
-    
+    @PostMapping("/update")
+    public ResponseEntity<UserProfileDTO> updateUserProfile(@RequestBody UserProfileDTO userProfileDTO,
+            @RequestParam Long id) throws Exception {
+        UserProfileDTO updatedProfile = userService.updateUserProfile(userProfileDTO, id);
+        return ResponseEntity.ok(updatedProfile);
+    }
 
-    
 }
 
 class UserProfileResponse {

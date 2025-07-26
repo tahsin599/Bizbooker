@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   MessageSquare, Plus, Send, User as UserIcon, Bot, 
@@ -21,10 +21,12 @@ const Chatbot = () => {
   const [expandedConvo, setExpandedConvo] = useState(null);
   const [error, setError] = useState(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const messagesEndRef = useRef(null);
   const messagesStartRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const token = localStorage.getItem('token');
+  const isFetchingRef = useRef(false);
 
   const api = axios.create({
     baseURL: API_BASE_URL,
@@ -57,8 +59,7 @@ const Chatbot = () => {
       setConversations(response.data);
       
       if (response.data.length > 0 && !activeConversation) {
-        setActiveConversation(response.data[0].id);
-        fetchMessages(response.data[0].id);
+        handleConversationSelect(response.data[0].id);
       }
     } catch (err) {
       console.error('Error fetching conversations:', err);
@@ -66,40 +67,58 @@ const Chatbot = () => {
     }
   };
 
-  const fetchMessages = async (conversationId, beforeId = null) => {
+  const handleConversationSelect = async (conversationId) => {
+    setMessages([]);
+    setActiveConversation(conversationId);
+    setHasMoreMessages(true);
+    await fetchMessages(conversationId);
+  };
+
+  const fetchMessages = useCallback(async (conversationId, beforeId = null) => {
+    if (!conversationId || (beforeId && (!hasMoreMessages || isFetchingRef.current))) return;
+    
     try {
+      isFetchingRef.current = true;
       setLoadingOlder(!!beforeId);
+      
       let url = `/api/messages/conversation/${conversationId}`;
       if (beforeId) {
         url += `?before=${beforeId}`;
       }
       
       const response = await api.get(url);
-      const newMessages = response.data.reverse(); // Reverse to get oldest first
+      const newMessages = response.data.reverse();
       
+      if (newMessages.length === 0 && beforeId) {
+        setHasMoreMessages(false);
+        return;
+      }
+
+      const container = messagesContainerRef.current;
+      const prevScrollHeight = container?.scrollHeight || 0;
+      const prevScrollTop = container?.scrollTop || 0;
+
       if (beforeId) {
-        // Maintain scroll position when loading older messages
-        const container = messagesContainerRef.current;
-        const oldScrollHeight = container.scrollHeight;
-        const oldScrollTop = container.scrollTop;
-        
         setMessages(prev => [...newMessages, ...prev]);
-        
-        // Calculate new scroll position after messages are added
-        requestAnimationFrame(() => {
-          container.scrollTop = container.scrollHeight - oldScrollHeight + oldScrollTop;
-        });
       } else {
         setMessages(newMessages);
-        setActiveConversation(conversationId);
+      }
+
+      // Restore scroll position after state update
+      if (beforeId && container) {
+        requestAnimationFrame(() => {
+          const newScrollHeight = container.scrollHeight;
+          container.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+        });
       }
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError('Failed to load messages');
     } finally {
       setLoadingOlder(false);
+      isFetchingRef.current = false;
     }
-  };
+  }, [hasMoreMessages]);
 
   const createNewConversation = async () => {
     try {
@@ -108,8 +127,7 @@ const Chatbot = () => {
       const newConversation = response.data;
       
       setConversations([newConversation, ...conversations]);
-      setActiveConversation(newConversation.id);
-      setMessages([]);
+      handleConversationSelect(newConversation.id);
       setIsLoading(false);
     } catch (err) {
       console.error('Error creating new conversation:', err);
@@ -124,22 +142,18 @@ const Chatbot = () => {
     const userMessage = {
       conversationId: activeConversation,
       userMessage: JSON.stringify({ userPrompt: newMessage }),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isUser: true,
+      id: Date.now()
     };
 
-    setMessages(prev => [...prev, {
-      ...userMessage,
-      id: Date.now(),
-      aiReply: '',
-      isUser: true
-    }]);
-    
+    setMessages(prev => [...prev, userMessage]);
     setNewMessage('');
     setIsLoading(true);
     setIsTyping(true);
 
     try {
-      const response = await api.post(`/api/gemini/chat?conversationId=${userMessage.conversationId}`, {
+      const response = await api.post(`/api/gemini/chat?conversationId=${activeConversation}`, {
         userPrompt: newMessage  
       });
 
@@ -155,14 +169,16 @@ const Chatbot = () => {
           setIsTyping(false);
           setTypingResponse('');
           
-          setMessages(prev => [...prev, {
-            id: Date.now(),
-            conversationId: activeConversation,
-            userMessage: '',
-            aiReply: responseText,
-            createdAt: new Date().toISOString(),
-            isUser: false
-          }]);
+          setMessages(prev => [
+            ...prev.filter(m => m.id !== userMessage.id),
+            {
+              ...userMessage,
+              id: Date.now(),
+              userMessage: JSON.stringify({ userPrompt: newMessage }),
+              aiReply: responseText,
+              isUser: false
+            }
+          ]);
           
           setIsLoading(false);
         }
@@ -174,24 +190,33 @@ const Chatbot = () => {
       setIsTyping(false);
       setTypingResponse('');
       
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        conversationId: activeConversation,
-        userMessage: '',
-        aiReply: 'Sorry, there was an error processing your request. Please try again.',
-        createdAt: new Date().toISOString(),
-        isUser: false
-      }]);
+      setMessages(prev => [
+        ...prev.filter(m => m.id !== userMessage.id),
+        {
+          id: Date.now(),
+          conversationId: activeConversation,
+          userMessage: JSON.stringify({ userPrompt: newMessage }),
+          aiReply: 'Sorry, there was an error processing your request. Please try again.',
+          createdAt: new Date().toISOString(),
+          isUser: false
+        }
+      ]);
     }
   };
 
-  const handleScroll = (e) => {
-    const { scrollTop } = e.target;
-    if (scrollTop < 100 && messages.length > 0 && !loadingOlder) {
+  const handleScroll = useCallback((e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    const scrollThreshold = 100;
+    
+    if (scrollTop < scrollThreshold && 
+        !loadingOlder && 
+        hasMoreMessages && 
+        messages.length > 0 &&
+        !isFetchingRef.current) {
       const oldestMessageId = messages[0].id;
       fetchMessages(activeConversation, oldestMessageId);
     }
-  };
+  }, [activeConversation, fetchMessages, loadingOlder, hasMoreMessages, messages]);
 
   const toggleConvoExpand = (convoId) => {
     setExpandedConvo(expandedConvo === convoId ? null : convoId);
@@ -237,7 +262,7 @@ const Chatbot = () => {
                 className="chatbot-conversation-header"
                 onClick={() => {
                   if (activeConversation !== conv.id) {
-                    fetchMessages(conv.id);
+                    handleConversationSelect(conv.id);
                   }
                   toggleConvoExpand(conv.id);
                 }}
@@ -265,7 +290,7 @@ const Chatbot = () => {
                   </div>
                   <button
                     className="chatbot-open-conversation-btn"
-                    onClick={() => fetchMessages(conv.id)}
+                    onClick={() => handleConversationSelect(conv.id)}
                   >
                     Open Chat
                   </button>
@@ -306,6 +331,11 @@ const Chatbot = () => {
               {loadingOlder && (
                 <div className="chatbot-loading-older">
                   <Loader2 size={20} className="chatbot-spin-animation" />
+                </div>
+              )}
+              {!hasMoreMessages && messages.length > 10 && (
+                <div className="chatbot-no-more-messages">
+                  No more messages to load
                 </div>
               )}
               <div ref={messagesStartRef} />

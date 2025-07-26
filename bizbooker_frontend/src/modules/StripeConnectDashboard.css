@@ -1,38 +1,39 @@
-.stripe-dashboard {
+/* Stripe Connect Dashboard Styles */
+.stripe-connect {
   min-height: 100vh;
   background: linear-gradient(135deg, #f0f5ff 0%, #f8faff 100%);
   padding-top: 72px;
 }
 
-.dashboard-container {
+.stripe-connect__container {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-.dashboard-header {
+.stripe-connect__header {
   text-align: center;
   margin-bottom: 3rem;
 }
 
-.dashboard-header h2 {
+.stripe-connect__header h2 {
   color: #1e293b;
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
-.dashboard-header p {
+.stripe-connect__header p {
   color: #64748b;
   font-size: 1.1rem;
 }
 
-.loading-state {
+.stripe-connect__loading {
   text-align: center;
   padding: 3rem;
 }
 
-.spinner {
+.stripe-connect__spinner {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f4f6;
@@ -47,7 +48,7 @@
   100% { transform: rotate(360deg); }
 }
 
-.error-message {
+.stripe-connect__error {
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 12px;
@@ -56,9 +57,7 @@
   color: #dc2626;
 }
 
-.no-account-state,
-.incomplete-onboarding,
-.account-active {
+.stripe-connect__state {
   background: white;
   border-radius: 16px;
   padding: 3rem;
@@ -66,12 +65,12 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
-.icon-container {
+.stripe-connect__icon {
   margin-bottom: 2rem;
   color: #4361ee;
 }
 
-.status-indicator {
+.stripe-connect__status-indicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -81,77 +80,70 @@
   margin-bottom: 2rem;
 }
 
-.status-indicator.success {
+.stripe-connect__status-indicator--success {
   background: #dcfce7;
   color: #16a34a;
 }
 
-.status-indicator.warning {
+.stripe-connect__status-indicator--warning {
   background: #fef3c7;
   color: #d97706;
 }
 
-.no-account-state h3,
-.incomplete-onboarding h3,
-.account-active h3 {
+.stripe-connect__state h3 {
   color: #1e293b;
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
 }
 
-.no-account-state p,
-.incomplete-onboarding p,
-.account-active p {
+.stripe-connect__state p {
   color: #64748b;
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 2rem;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #4361ee 0%, #6366f1 100%);
-  color: white;
-  border: none;
+.stripe-connect__btn {
   padding: 1rem 2rem;
   border-radius: 12px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.stripe-connect__btn--primary {
+  background: linear-gradient(135deg, #4361ee 0%, #6366f1 100%);
+  color: white;
+  border: none;
   box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
 }
 
-.btn-primary:hover {
+.stripe-connect__btn--primary:hover {
   background: linear-gradient(135deg, #3730a3 0%, #4f46e5 100%);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
 }
 
-.btn-primary:disabled {
+.stripe-connect__btn--primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-.btn-secondary {
+.stripe-connect__btn--secondary {
   background: #f8fafc;
   color: #475569;
   border: 1px solid #e2e8f0;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
-.btn-secondary:hover {
+.stripe-connect__btn--secondary:hover {
   background: #f1f5f9;
   transform: translateY(-1px);
 }
 
-.btn-clear {
+.stripe-connect__btn-clear {
   background: none;
   border: none;
   color: #dc2626;
@@ -159,57 +151,57 @@
   cursor: pointer;
 }
 
-.status-details {
+.stripe-connect__status-details {
   background: #f8fafc;
   border-radius: 12px;
   padding: 1.5rem;
   margin: 2rem 0;
 }
 
-.status-item {
+.stripe-connect__status-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
 
-.status-item:last-child {
+.stripe-connect__status-item:last-child {
   margin-bottom: 0;
 }
 
-.status-dot {
+.stripe-connect__status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
 }
 
-.status-dot.success {
+.stripe-connect__status-dot--success {
   background: #16a34a;
 }
 
-.status-dot.warning {
+.stripe-connect__status-dot--warning {
   background: #d97706;
 }
 
-.account-info {
+.stripe-connect__account-info {
   margin: 2rem 0;
 }
 
-.info-grid {
+.stripe-connect__info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.info-item {
+.stripe-connect__info-item {
   background: #f8fafc;
   border-radius: 12px;
   padding: 1.5rem;
   text-align: center;
 }
 
-.info-item h4 {
+.stripe-connect__info-item h4 {
   color: #64748b;
   font-size: 0.875rem;
   font-weight: 600;
@@ -218,28 +210,28 @@
   margin-bottom: 0.5rem;
 }
 
-.info-item p {
+.stripe-connect__info-item p {
   color: #1e293b;
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;
 }
 
-.info-item small {
+.stripe-connect__info-item small {
   color: #64748b;
   font-size: 0.75rem;
 }
 
-.fee-percentage,
-.earnings-percentage {
+.stripe-connect__fee,
+.stripe-connect__earnings {
   color: #4361ee !important;
 }
 
-.status-active {
+.stripe-connect__status-text {
   color: #16a34a !important;
 }
 
-.dashboard-actions {
+.stripe-connect__actions {
   display: flex;
   gap: 1rem;
   justify-content: center;
@@ -247,34 +239,34 @@
   margin-bottom: 3rem;
 }
 
-.help-section {
+.stripe-connect__help {
   background: #f8fafc;
   border-radius: 12px;
   padding: 2rem;
   text-align: left;
 }
 
-.help-section h4 {
+.stripe-connect__help h4 {
   color: #1e293b;
   font-size: 1.125rem;
   font-weight: 700;
   margin-bottom: 1rem;
 }
 
-.help-section ul {
+.stripe-connect__help-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.help-section li {
+.stripe-connect__help-item {
   color: #64748b;
   padding: 0.5rem 0;
   padding-left: 1.5rem;
   position: relative;
 }
 
-.help-section li::before {
+.stripe-connect__help-item::before {
   content: '•';
   color: #4361ee;
   position: absolute;
@@ -283,27 +275,24 @@
 }
 
 @media (max-width: 768px) {
-  .dashboard-container {
+  .stripe-connect__container {
     padding: 1rem;
   }
 
-  .no-account-state,
-  .incomplete-onboarding,
-  .account-active {
+  .stripe-connect__state {
     padding: 2rem;
   }
 
-  .info-grid {
+  .stripe-connect__info-grid {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 1rem;
   }
 
-  .dashboard-actions {
+  .stripe-connect__actions {
     flex-direction: column;
   }
 
-  .btn-primary,
-  .btn-secondary {
+  .stripe-connect__btn {
     width: 100%;
   }
 }
