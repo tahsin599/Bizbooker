@@ -106,7 +106,7 @@ const BusinessListingPage = () => {
 
         setLoading(true);
         try {
-            let url = `http://localhost:8080/api/customer/businesses?page=${page}&size=6`;
+            let url = `${API_BASE_URL}/api/customer/businesses?page=${page}&size=6`;
             if (filters.category) url += `&categoryId=${filters.category}`;
             if (filters.area) url += `&area=${filters.area}`;
 

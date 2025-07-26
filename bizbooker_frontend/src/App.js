@@ -28,6 +28,12 @@ import BusinessApprovalDashboard from './modules/PendingBusinesses';
 import PendingBusinesses from './modules/PendingBusinesses';
 import Map from './modules/Map'; // Import the Map component
 import BusinessForm from './modules/BusinessForm'; // Import the BusinessForm component
+import PaymentSuccess from './modules/PaymentSuccess';
+import BookingPaymentSuccess from './modules/BookingPaymentSuccess';
+import StripeConnectDashboard from './modules/StripeConnectDashboard';
+import StripeOnboardingComplete from './modules/StripeOnboardingComplete';
+import StripeOnboarding from './modules/StripeOnboarding';
+
 function App() {
   return (
     <BrowserRouter>
@@ -57,7 +63,15 @@ function App() {
           <Route path="/business/reviews" element={<><Navbar isAuthenticated={true} /><BusinessReviewsPage /></>} />
              <Route path="/approve" element={<><Navbar isAuthenticated={true} /><PendingBusinesses/></>} />
              <Route path="/map" element={<><Navbar isAuthenticated={true} /><BusinessForm /></>} />
-       
+           <Route path="/payment-success" element={<PaymentSuccess />} />
+
+          <Route path="/booking-payment-success" element={<BookingPaymentSuccess />} />
+
+          <Route path="/stripe-connect-dashboard/:businessId" element={<StripeConnectDashboard />} />
+
+          <Route path="/stripe-onboarding/:businessId" element={<StripeOnboarding />} />
+
+          <Route path="/stripe-onboarding-complete/:businessId" element={<StripeOnboardingComplete />} />
 
           {/* Add more routes as needed */}
         </Routes>

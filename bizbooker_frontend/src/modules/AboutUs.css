@@ -57,7 +57,7 @@
 /* Section Base */
 .about-section {
   padding: 4rem 2rem;
-  max-width: 1200px;
+  width: 90%;
   margin: 0 auto;
   text-align: center;
 }

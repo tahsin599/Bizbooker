@@ -112,15 +112,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -129,22 +127,11 @@ import java.util.function.Function;
 @Service
 public class JWTService {
 
-    private final String secretKey;
-    private static final long EXPIRATION_TIME = 60 * 60 * 30 * 1000; // 30 hours in milliseconds
-
-    public JWTService() {
-        this.secretKey = generateSecureKey();
-    }
-
-    private String generateSecureKey() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey secretKey = keyGen.generateKey();
-            return Base64.getEncoder().encodeToString(secretKey.getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to generate secret key", e);
-        }
-    }
+    @Value("${jwt.secret:mySecretKey12345678901234567890123456789012345678901234567890123456789012345678901234567890}")
+    private String secretKey;
+    
+    @Value("${jwt.expiration:108000000}")
+    private long expirationTime;
 
     public String generateToken(String username) {
         return buildToken(username, new HashMap<>());
@@ -174,7 +161,7 @@ public class JWTService {
                 .claims(claims)
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

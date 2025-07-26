@@ -34,7 +34,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 3rem;
-  max-width: 1400px;
+  width: 90%;
   margin: 0 auto;
   padding-bottom: 2rem;
 }
@@ -204,7 +204,7 @@
 }
 
 .footer-bottom-content {
-  max-width: 1400px;
+  width: 90%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

@@ -114,8 +114,77 @@ const AppointmentList = () => {
     }
   };
 
-  const handlePay = (appointmentId) => {
-    console.log('Pay for appointment:', appointmentId);
+  const handlePay = async (appointmentId) => {
+    try {
+      setLoading(true);
+      
+      // Find the appointment data
+      const appointment = appointments.find(apt => apt.appointmentId === appointmentId);
+      if (!appointment) {
+        throw new Error('Appointment not found');
+      }
+
+      console.log('Starting payment for appointment:', appointmentId);
+      
+      // Create checkout session for payment
+      const response = await fetch(`${API_BASE_URL}/api/payments/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          price: appointment.slotPrice || 0,
+          quantity: 1,
+          businessId: appointment.businessId,
+          appointmentId: appointmentId,
+          successUrl: `${window.location.origin}/booking-payment-success`,
+          cancelUrl: `${window.location.origin}/dashboard`
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create payment session: ${errorText}`);
+      }
+
+      const stripeData = await response.json();
+      console.log('Stripe response:', stripeData);
+      
+      if (stripeData.alreadyPaid === "true") {
+        // Payment already completed, just refresh the appointments
+        alert('Payment already completed! Appointment has been confirmed.');
+        fetchAppointments(); // Refresh to show updated status
+        return;
+      }
+      
+      if (stripeData.url && stripeData.sessionId) {
+        // Store booking data for after payment
+        localStorage.setItem('confirmingAppointmentId', appointmentId);
+        localStorage.setItem('stripeSessionId', stripeData.sessionId);
+        sessionStorage.setItem('confirmingAppointmentId', appointmentId);
+        sessionStorage.setItem('stripeSessionId', stripeData.sessionId);
+        
+        // Store booking data for payment completion
+        localStorage.setItem('pendingAppointmentData', JSON.stringify({
+          slotPrice: appointment.slotPrice,
+          businessId: appointment.businessId,
+          appointmentId: appointmentId
+        }));
+        
+        console.log('Redirecting to Stripe checkout:', stripeData.url);
+        
+        // Redirect to Stripe Checkout
+        window.location.href = stripeData.url;
+      } else {
+        throw new Error('Invalid payment session response');
+      }
+    } catch (error) {
+      console.error('Error starting payment process:', error);
+      alert('Failed to start payment process: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStatusBadge = (status) => {

@@ -1,4 +1,4 @@
-package com.tahsin.backend.Repository;
+ package com.tahsin.backend.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,6 +18,12 @@ import com.tahsin.backend.Model.Payment;
 @Component
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByAppointment(Appointment appointment);
+    
+    @Query("SELECT p FROM Payment p WHERE p.appointment.id = :appointmentId")
+    Optional<Payment> findByAppointmentId(@Param("appointmentId") Long appointmentId);
+    
+    Optional<Payment> findByTransactionId(String transactionId);
+    Optional<Payment> findByStripePaymentIntentId(String stripePaymentIntentId);
     
     @Query("SELECT p FROM Payment p WHERE p.appointment.customer.id = :userId ORDER BY p.createdAt DESC")
     List<Payment> findUserPaymentHistory(@Param("userId") Long userId);

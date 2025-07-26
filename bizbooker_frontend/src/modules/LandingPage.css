@@ -9,7 +9,7 @@
   --light: #f8f9fa;
   --gray: #6c757d;
   --light-gray: #e9ecef;
-  --max-width: 1400px;
+  --container-width: 90%;
   --section-padding: 8rem 2rem;
   --border-radius: 16px;
   --box-shadow: 0 10px 30px rgba(67, 97, 238, 0.1);
@@ -93,8 +93,7 @@ p {
 }
 
 .hero-content {
-  width: 100%;
-  max-width: var(--max-width);
+  width: 90%;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -227,7 +226,7 @@ p {
 }
 
 .entry-container {
-  max-width: var(--max-width);
+  width: 90%;
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
@@ -266,7 +265,7 @@ p {
 }
 
 .value-container {
-  max-width: var(--max-width);
+  width: 90%;
   margin: 0 auto;
 }
 

@@ -9,7 +9,7 @@
 }
 
 .dashboard-content {
-  max-width: var(--max-width);
+  width: 90%;
   margin: 0 auto;
   padding: var(--section-padding);
   display: flex;

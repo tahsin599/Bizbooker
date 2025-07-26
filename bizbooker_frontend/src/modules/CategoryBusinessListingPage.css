@@ -14,8 +14,8 @@
 }
 
 .category-listing-container {
-  max-width: 1400px;
-  --margin: 0 auto;
+  width: 90%;
+  margin: 0 auto;
   padding: 2rem 2rem 4rem;
   
   padding-top: 120px; 

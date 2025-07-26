@@ -12,7 +12,7 @@
   --bg-light: #f8f9fa;
   --bg-white: #ffffff;
   
-  max-width: 1200px;
+  width: 90%;
   margin: 0 auto;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

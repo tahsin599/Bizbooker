@@ -10,7 +10,7 @@ import './BusinessService.css';
 import { Modal } from 'antd';
 import message from 'antd/lib/message';
 import axios from 'axios';
-import BusinessReviewsTab from './BusinessReviewsTab';
+// Stripe Checkout integration
 
 const BusinessService = () => {
   const { businessId } = useParams();
@@ -30,7 +30,9 @@ const BusinessService = () => {
   const [expandedLocation, setExpandedLocation] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingData, setBookingData] = useState(null);
+  const [pendingBooking, setPendingBooking] = useState(null);
   const token = localStorage.getItem('token');
+  // Remove setShowPayment, not needed for Stripe Checkout
 
   // Fetch business data
   useEffect(() => {
@@ -149,6 +151,9 @@ const BusinessService = () => {
 
           const availableSlots = interval ? (interval.maxSlots - interval.usedSlots) : 0;
           const status = availableSlots > 0 ? 'vacant' : 'booked';
+          
+          // Get price from interval or fallback to slot config price
+          const slotPrice = interval?.price || config.slotPrice || 0;
 
           slotIntervals.push({
             start: currentTime.toTimeString().substring(0, 5),
@@ -156,6 +161,7 @@ const BusinessService = () => {
             status,
             customer: null,
             availableSlots,
+            price: slotPrice,
             intervalData: interval
           });
 
@@ -270,45 +276,100 @@ const BusinessService = () => {
       const selectedSlot = availableSlots[selectedDate]?.find(
         slot => slot.start === selectedTime
       );
-
       if (selectedSlot && selectedSlot.status === 'vacant' && selectedSlot.availableSlots > 0) {
-        const appointmentData = {
-          configId: selectedSlot.intervalData.configId,
-          customerId: localStorage.getItem('userId'),
-          businessId: businessId,
-          locationId: selectedLocation.locationId,
-          startTime: `${selectedDate}T${selectedTime}:00`,
-          endTime: `${selectedDate}T${selectedSlot.end}:00`,
-          userSelectedCount: selectedSlot.selectedCount || 1,
-        };
-
         try {
-          const response = await axios.post(`${API_BASE_URL}/api/appointments`, appointmentData, {
+          // Step 1: Create pending appointment first
+          const appointmentData = {
+            customerId: localStorage.getItem('userId'),
+            businessId,
+            locationId: selectedLocation.locationId,
+            startTime: `${selectedDate}T${selectedTime}:00`,
+            endTime: `${selectedDate}T${selectedSlot.end}:00`,
+            configId: selectedSlot.intervalData.configId,
+            userSelectedCount: selectedSlot.selectedCount || 1,
+            slotPrice: selectedSlot.price || 0,
+            notes: ""
+          };
+
+          console.log('Creating pending appointment:', appointmentData);
+          
+          const appointmentResponse = await fetch(`${API_BASE_URL}/api/appointments/pending`, {
+            method: 'POST',
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(appointmentData)
           });
 
-          // Show success modal with booking details
-          setBookingData({
-            businessName: business.businessName,
-            location: `${selectedLocation.address}, ${selectedLocation.city}`,
-            date: selectedDate,
-            time: `${selectedTime} - ${selectedSlot.end}`,
-            referenceId: response.data.appointmentId,
-            slotsBooked: selectedSlot.selectedCount || 1
-          });
-          setBookingSuccess(true);
+          if (!appointmentResponse.ok) {
+            const errorData = await appointmentResponse.json();
+            throw new Error(errorData.error || 'Failed to create appointment');
+          }
 
-          // Refresh available slots
-          fetchSlotConfig(selectedLocation.locationId);
-        } catch (error) {
-          console.error('Error booking appointment:', error);
-          message.error('Failed to book appointment');
+          const createdAppointment = await appointmentResponse.json();
+          console.log('Pending appointment created:', createdAppointment);
+          
+          // Store appointment ID for later use (backend returns appointmentId, not id)
+          const appointmentId = createdAppointment.appointmentId || createdAppointment.id;
+          localStorage.setItem('pendingAppointmentId', appointmentId);
+          sessionStorage.setItem('pendingAppointmentId', appointmentId);
+          localStorage.setItem('pendingAppointmentData', JSON.stringify(appointmentData));
+          sessionStorage.setItem('pendingAppointmentData', JSON.stringify(appointmentData));
+
+          // Step 2: Create Stripe checkout session
+          const res = await fetch(`${API_BASE_URL}/api/payments/create-checkout-session`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              price: selectedSlot.price || 0,
+              quantity: selectedSlot.selectedCount || 1,
+              businessId,
+              locationId: selectedLocation.locationId,
+              startTime: `${selectedDate}T${selectedTime}:00`,
+              endTime: `${selectedDate}T${selectedSlot.end}:00`,
+              configId: selectedSlot.intervalData.configId,
+              customerId: localStorage.getItem('userId'),
+              appointmentId: appointmentId  // Pass the appointment ID to link the payment
+            })
+          });
+          
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Failed to create checkout session:', errorText);
+            throw new Error(`Failed to create checkout session: ${errorText}`);
+          }
+          
+          const stripeData = await res.json();
+          console.log('Stripe checkout session response:', stripeData);
+          
+          if (stripeData.error) {
+            throw new Error(`Stripe error: ${stripeData.error}`);
+          }
+          
+          if (stripeData.url && stripeData.sessionId) {
+            // Store the session ID as payment reference
+            localStorage.setItem('stripeSessionId', stripeData.sessionId);
+            sessionStorage.setItem('stripeSessionId', stripeData.sessionId);
+            
+            // Redirect to Stripe Checkout
+            window.location.href = stripeData.url;
+          } else {
+            console.error('Invalid stripe response:', stripeData);
+            throw new Error('Failed to create Stripe checkout session - missing URL or session ID');
+          }
+        } catch (err) {
+          console.error('Booking error:', err);
+          alert('Failed to book appointment: ' + err.message);
         }
       }
     }
   };
+
+  // Remove handlePaymentSuccess, not needed for Stripe Checkout
 
   const navigateMonth = (direction) => {
     if (direction === 'prev') {
@@ -365,7 +426,7 @@ const BusinessService = () => {
       {/* Success Booking Modal */}
       <Modal
         title="Booking Confirmation"
-        visible={bookingSuccess}
+        open={bookingSuccess}
         onOk={() => {
           setBookingSuccess(false);
           setSelectedDate(null);
@@ -373,8 +434,8 @@ const BusinessService = () => {
         }}
         onCancel={() => setBookingSuccess(false)}
         footer={[
-          <button
-            key="ok"
+          <button 
+            key="ok" 
             className="modal-ok-btn"
             onClick={() => {
               setBookingSuccess(false);
@@ -403,6 +464,12 @@ const BusinessService = () => {
             </div>
             <div className="summary-detail">
               <strong>Slots Booked:</strong> {bookingData.slotsBooked}
+            </div>
+            <div className="summary-detail">
+              <strong>Price per Slot:</strong> ${bookingData.pricePerSlot?.toFixed(2) || '0.00'}
+            </div>
+            <div className="summary-detail total-price">
+              <strong>Total Amount:</strong> ${bookingData.totalPrice?.toFixed(2) || '0.00'}
             </div>
             <div className="summary-detail">
               <strong>Reference ID:</strong> {bookingData.referenceId}
@@ -444,12 +511,6 @@ const BusinessService = () => {
           onClick={() => setActiveTab('locations')}
         >
           Locations
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
-          onClick={() => setActiveTab('reviews')}
-        >
-          Reviews
         </button>
       </div>
 
@@ -507,9 +568,7 @@ const BusinessService = () => {
                             Select This Location
                           </button>
                         </div>
-                      )
-                     
-                      }
+                      )}
                     </div>
                   ))}
                 </div>
@@ -579,14 +638,17 @@ const BusinessService = () => {
                           availableSlots[selectedDate].map((timeSlot, index) => {
                             const isAvailable = timeSlot.status === 'vacant' && timeSlot.availableSlots > 0;
                             const isFullyBooked = timeSlot.availableSlots <= 0;
-
+                            
                             return (
                               <div
                                 key={index}
                                 className={`time-slot-detailed ${timeSlot.status} ${isFullyBooked ? 'fully-booked' : ''} ${selectedTime === timeSlot.start ? 'selected' : ''}`}
                                 onClick={() => isAvailable && handleTimeClick(timeSlot)}
                               >
-                                <div className="time-slot-time">{timeSlot.start} - {timeSlot.end}</div>
+                                <div className="time-slot-header">
+                                  <div className="time-slot-time">{timeSlot.start} - {timeSlot.end}</div>
+                                  <div className="time-slot-price">${(timeSlot.price || 0).toFixed(2)}</div>
+                                </div>
                                 <div className="time-slot-status">
                                   <span className={`status-badge ${isAvailable ? 'vacant' : 'booked'}`}>
                                     {isAvailable ? (
@@ -623,7 +685,7 @@ const BusinessService = () => {
                                             Math.max(1, parseInt(e.target.value) || 1),
                                             timeSlot.availableSlots
                                           );
-
+                                        
                                           // Update the selected count in availableSlots
                                           setAvailableSlots(prev => ({
                                             ...prev,
@@ -669,17 +731,27 @@ const BusinessService = () => {
                         <p><strong>Slots:</strong> {
                           availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.selectedCount || 1
                         }</p>
+                        <p><strong>Price per Slot:</strong> ${
+                          (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0).toFixed(2)
+                        }</p>
+                        <p className="total-price"><strong>Total:</strong> ${
+                          ((availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.price || 0) * 
+                           (availableSlots[selectedDate]?.find(slot => slot.start === selectedTime)?.selectedCount || 1)).toFixed(2)
+                        }</p>
                       </div>
                       <button className="book-appointment-btn" onClick={handleBookAppointment}>
                         Book Appointment <ArrowRight size={16} />
                       </button>
                     </div>
                   )}
+
+                  {/* Stripe Payment Modal */}
+                  {/* Stripe Checkout handles payment UI, no modal needed here */}
                 </div>
               )}
             </div>
           </div>
-        ) :activeTab === 'locations' ? (
+        ) : (
           /* Locations Tab */
           <div className="locations-section">
             <h3>Our Locations</h3>
@@ -720,16 +792,10 @@ const BusinessService = () => {
                     <HoursIcon size={16} /> View Schedule
                   </button>
                 </div>
-              )
-             )}
+              ))}
             </div>
           </div>
-        ): (
-    /* Reviews Tab */
-    <div className="reviews-section">
-      <BusinessReviewsTab businessId={businessId} />
-    </div>
-  )}
+        )}
       </div>
     </div>
   );

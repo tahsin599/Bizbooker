@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
 import { 
   Calendar, Clock, ChevronRight, ChevronDown, ChevronUp,
-  Check, X, Loader, ArrowLeft, Search, Filter
+  Check, X, Loader, ArrowLeft, Search, Filter, DollarSign,
+  MapPin, Star, TrendingUp, Activity, CheckCircle
 } from 'lucide-react';
 import './BookingsPage.css';
 
@@ -16,6 +17,14 @@ const BookingsPage = () => {
   const [expandedBooking, setExpandedBooking] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0
+  });
+
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const userId = localStorage.getItem('userId');
@@ -28,7 +37,6 @@ const BookingsPage = () => {
     { value: 'CANCELLED', label: 'Cancelled' },
     { value: 'COMPLETED', label: 'Completed' }
   ];
-
   // Fetch bookings with pagination
   const fetchBookings = async (reset = false) => {
     try {
@@ -66,10 +74,21 @@ const BookingsPage = () => {
     }
   };
 
+  // Calculate stats from bookings
+  useEffect(() => {
+    const newStats = bookings.reduce((acc, booking) => {
+      acc.total++;
+      acc[booking.status.toLowerCase()]++;
+      return acc;
+    }, { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 });
+    
+    setStats(newStats);
+  }, [bookings]);
+
   // Initial load and when filters change
   useEffect(() => {
     fetchBookings(true);
-  }, [statusFilter, searchTerm]);
+  }, [statusFilter, searchTerm, userId, token]);
 
   // Load more bookings
   const loadMore = () => {
@@ -117,6 +136,119 @@ const BookingsPage = () => {
     }
   };
 
+  // Confirm appointment - trigger payment process
+  const confirmAppointment = async (booking) => {
+    console.log('confirmAppointment called with booking:', booking);
+    try {
+      setLoading(true);
+      console.log('Creating payment session for appointment:', booking.appointmentId || booking.id);
+      
+      // Create checkout session for payment
+      const response = await fetch(`${API_BASE_URL}/api/payments/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          price: booking.slotPrice || 0,
+          quantity: 1,
+          businessId: booking.businessId,
+          appointmentId: booking.appointmentId || booking.id,
+          successUrl: `${window.location.origin}/booking-payment-success`,
+          cancelUrl: `${window.location.origin}/bookings`
+        })
+      });
+
+      console.log('Payment session response status:', response.status);
+      console.log('Payment session response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Payment session creation failed:', errorText);
+        throw new Error('Failed to create payment session');
+      }
+
+      const stripeData = await response.json();
+      console.log('Stripe data received:', stripeData);
+      
+      if (stripeData.alreadyPaid === "true") {
+        // Payment already completed, just refresh the bookings
+        alert('Payment already completed! Appointment has been confirmed.');
+        fetchBookings(true); // Refresh to show updated status
+        return;
+      }
+      
+      if (stripeData.url && stripeData.sessionId) {
+        // Store booking data for after payment
+        localStorage.setItem('confirmingAppointmentId', booking.appointmentId || booking.id);
+        localStorage.setItem('stripeSessionId', stripeData.sessionId);
+        sessionStorage.setItem('confirmingAppointmentId', booking.appointmentId || booking.id);
+        sessionStorage.setItem('stripeSessionId', stripeData.sessionId);
+        
+        // Store booking data for payment completion
+        localStorage.setItem('pendingAppointmentData', JSON.stringify({
+          slotPrice: booking.slotPrice,
+          businessId: booking.businessId,
+          appointmentId: booking.appointmentId || booking.id
+        }));
+        
+        // Redirect to Stripe Checkout
+        window.location.href = stripeData.url;
+      } else {
+        throw new Error('Invalid payment session response');
+      }
+    } catch (error) {
+      console.error('Error confirming appointment:', error);
+      alert('Failed to start payment process: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel appointment
+  const cancelAppointment = async (booking) => {
+    if (!window.confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Use dedicated cancellation endpoint that handles slot restoration
+      const response = await fetch(`${API_BASE_URL}/api/appointments/${booking.appointmentId || booking.id}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel appointment');
+      }
+
+      alert('Appointment cancelled successfully!');
+      fetchBookings(true); // Refresh to show updated status
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      alert('Failed to cancel appointment: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate stats from bookings
+  useEffect(() => {
+    const newStats = bookings.reduce((acc, booking) => {
+      acc.total++;
+      acc[booking.status.toLowerCase()]++;
+      return acc;
+    }, { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 });
+    
+    setStats(newStats);
+  }, [bookings]);
+
   return (
     <div className="bookings-page">
       <div className="bookings-header">
@@ -152,6 +284,30 @@ const BookingsPage = () => {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <div className="bookings-stats">
+        <div className="stat-card">
+          <h3>Total Bookings</h3>
+          <p className="stat-value">{stats.total}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Pending</h3>
+          <p className="stat-value">{stats.pending}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Confirmed</h3>
+          <p className="stat-value">{stats.confirmed}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Completed</h3>
+          <p className="stat-value">{stats.completed}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Cancelled</h3>
+          <p className="stat-value">{stats.cancelled}</p>
         </div>
       </div>
 
@@ -221,12 +377,14 @@ const BookingsPage = () => {
                 {expandedBooking === booking.id && (
                   <div className="booking-details">
                     <div className="detail-row">
-                      <span className="detail-label">Location:</span>
-                      <span className="detail-value">{booking.locationAddress}</span>
+                      <span className="detail-label">
+                        <MapPin size={16} /> Location:
+                      </span>
+                      <span className="detail-value">{booking.locationAddress || booking.locationName}</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Booking ID:</span>
-                      <span className="detail-value">{booking.id}</span>
+                      <span className="detail-value">#{booking.appointmentId || booking.id}</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Status:</span>
@@ -234,13 +392,34 @@ const BookingsPage = () => {
                         {booking.status}
                       </span>
                     </div>
+                    {booking.slotPrice && (
+                      <div className="detail-row">
+                        <span className="detail-label">
+                          <DollarSign size={16} /> Price:
+                        </span>
+                        <span className="detail-value detail-price">
+                          ${booking.slotPrice.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     <div className="booking-actions">
                       {booking.status === 'PENDING' && (
                         <>
-                          <button className="action-button confirm">
-                            <Check size={16} /> Confirm
+                          <button 
+                            className="action-button confirm" 
+                            onClick={() => {
+                              console.log('Complete Payment button clicked for booking:', booking);
+                              confirmAppointment(booking);
+                            }}
+                            disabled={loading}
+                          >
+                            <CheckCircle size={16} /> {loading ? 'Processing...' : 'Confirm & Pay'}
                           </button>
-                          <button className="action-button cancel">
+                          <button 
+                            className="action-button cancel" 
+                            onClick={() => cancelAppointment(booking)}
+                            disabled={loading}
+                          >
                             <X size={16} /> Cancel
                           </button>
                         </>

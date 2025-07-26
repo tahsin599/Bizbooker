@@ -75,4 +75,16 @@ public class SlotInterval {
     }
 
     // Getters and setters
+
+    // Add price field and getter
+    @Column(nullable = false)
+    private Double price = 0.0;
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
 }
