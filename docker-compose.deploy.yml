@@ -49,7 +49,7 @@ services:
     build:
       context: ./bizbooker_frontend
       dockerfile: Dockerfile
-      target: production
+      target: development
     container_name: bizbooker-frontend
     ports:
       - "3000:3000"
