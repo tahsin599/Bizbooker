@@ -48,7 +48,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 CMD ["serve", "-s", "build", "-l", "3000"]
 
 # Development stage
-FROM node:20-slim as development
+FROM  node:18-slim as development
 
 WORKDIR /app
 
