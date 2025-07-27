@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,6 +28,8 @@ import com.tahsin.backend.Service.BusinessService;
 import com.tahsin.backend.Service.JWTService;
 import com.tahsin.backend.Service.UserService;
 import com.tahsin.backend.dto.BusinessDTO;
+import com.tahsin.backend.dto.TopBusinessDTO;
+import com.tahsin.backend.dto.UserBusinessDTO;
 
 import jakarta.transaction.TransactionScoped;
 import jakarta.transaction.Transactional;
@@ -59,27 +62,23 @@ public class BusinessController {
         // Check if business name exists
         if (businessService.businessNameExists(businessName)) {
             return ResponseEntity.badRequest().body(
-                Map.of("error", "Business name already exists")
-            );
+                    Map.of("error", "Business name already exists"));
         }
 
         // Process registration
         Business business = businessService.registerBusiness(
-            userId, businessName, description, categoryName, image,
-            address, area, city, postalCode, contactPhone, contactEmail
-        );
+                userId, businessName, description, categoryName, image,
+                address, area, city, postalCode, contactPhone, contactEmail);
 
         return ResponseEntity.ok(Map.of(
-            "status", "success",
-            "businessId", business.getId()
-        ));
+                "status", "success",
+                "businessId", business.getId()));
     }
-
 
     @GetMapping
     public ResponseEntity<?> getUserBusinesses(@RequestParam Long ownerId) {
         List<Business> businesses = businessService.getBusinessesByOwnerIdWithDetails(ownerId);
-        
+
         if (businesses.isEmpty()) {
             return ResponseEntity.ok().body(List.of());
         }
@@ -88,37 +87,31 @@ public class BusinessController {
         List<BusinessDTO> businessDTOs = businesses.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(businessDTOs);
     }
 
-     @GetMapping("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> getBusinessById(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authHeader) {
-        
-        
-       
 
         try {
             Business business = businessService.getBusinessById(id);
-            
+
             // Check if the requesting user owns this business
-            
-            
 
             BusinessDTO dto = convertToDTO(business);
             return ResponseEntity.ok(dto);
-            
+
         } catch (Exception e) {
             return ResponseEntity.status(404).body(Map.of("error", "Business not found"));
         }
     }
 
-
     public BusinessDTO convertToDTO(Business business) {
         BusinessDTO dto = new BusinessDTO();
-        
+
         // Basic business info
         dto.setId(business.getId());
         dto.setBusinessName(business.getBusinessName());
@@ -126,17 +119,17 @@ public class BusinessController {
         dto.setApprovalStatus(business.getApprovalStatus());
         dto.setIsApproved(business.getIsApproved());
         dto.setCreatedAt(business.getCreatedAt());
-        
+
         // Image data
         dto.setImageData(business.getImageData());
         dto.setImageType(business.getImageType());
         dto.setImageName(business.getImageName());
-        
+
         // Service category
         if (business.getServiceCategory() != null) {
             dto.setCategoryName(business.getServiceCategory().getName());
         }
-        
+
         // Locations (simplified to avoid circular references)
         if (business.getLocations() != null && !business.getLocations().isEmpty()) {
             dto.setLocations(business.getLocations().stream()
@@ -148,11 +141,10 @@ public class BusinessController {
                             location.getPostalCode(),
                             location.getContactPhone(),
                             location.getContactEmail(),
-                            location.getIsPrimary()
-                    ))
+                            location.getIsPrimary()))
                     .collect(Collectors.toList()));
         }
-        
+
         return dto;
     }
 
@@ -166,13 +158,13 @@ public class BusinessController {
             return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access"));
         }
         String token = authHeader.substring(7);
-        
-        String username=jwtService.extractUsername(token);
+
+        String username = jwtService.extractUsername(token);
         System.out.println("Username from token: " + username);
         if (username == null || !username.equals("admin")) {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
-        
+
         try {
             return ResponseEntity.ok(businessService.getPendingBusinesses(page, size));
         } catch (Exception e) {
@@ -189,22 +181,22 @@ public class BusinessController {
             return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access"));
         }
         String token = authHeader.substring(7);
-        
-        String username=jwtService.extractUsername(token);
+
+        String username = jwtService.extractUsername(token);
         System.out.println("Username from token: " + username);
         if (username == null || !username.equals("admin")) {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
-        
+
         try {
-            Business business=businessRepository.findById(id).orElse(null);
-            if(business == null) {
+            Business business = businessRepository.findById(id).orElse(null);
+            if (business == null) {
                 return ResponseEntity.status(404).body(Map.of("error", "Business not found"));
             }
             business.setApprovalStatus(ApprovalStatus.APPROVED);
             business.setIsApproved(true);
             businessRepository.save(business);
-            
+
             return ResponseEntity.ok(Map.of("status", "success", "message", "Business approved successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to approve business"));
@@ -222,13 +214,13 @@ public class BusinessController {
             return ResponseEntity.status(403).body(Map.of("error", "Unauthorized access"));
         }
         String token = authHeader.substring(7);
-        
-        String username=jwtService.extractUsername(token);
+
+        String username = jwtService.extractUsername(token);
         System.out.println("Username from token: " + username);
         if (username == null || !username.equals("admin")) {
             return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
         }
-        
+
         try {
             Business business = businessRepository.findById(id).orElse(null);
             if (business == null) {
@@ -237,12 +229,26 @@ public class BusinessController {
             business.setApprovalStatus(ApprovalStatus.REJECTED);
             business.setIsApproved(false);
             businessRepository.save(business);
-            
+
             return ResponseEntity.ok(Map.of("status", "success", "message", "Business rejected successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to reject business"));
         }
     }
 
+    @GetMapping("/top-by-appointments")
+    public Page<TopBusinessDTO> getTopBusinessesByAppointments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        return businessService.getTopBusinessesByAppointments(page, size);
+    }
+
+    @GetMapping("/user/{userId}/frequent-businesses")
+    public Page<UserBusinessDTO> getUserFrequentBusinesses(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        return businessService.getBusinessesByUserAppointments(userId, page, size);
+    }
 
 }

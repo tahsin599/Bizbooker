@@ -20,6 +20,7 @@ import moment from 'moment';
 import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../config/api';
+import { useLocation } from 'react-router-dom';
 
 const { Option } = Select;
 
@@ -34,7 +35,10 @@ const BusinessConfig = () => {
   const [savedConfig, setSavedConfig] = useState(null);
   const [stripeAccountStatus, setStripeAccountStatus] = useState(null);
   const token = localStorage.getItem('token');
-  const businessId = useParams().businessId;
+  const location = useLocation();
+  const { id} = location.state || {};
+  const businessId=id;
+  
   const navigate = useNavigate();
 
   useEffect(() => {

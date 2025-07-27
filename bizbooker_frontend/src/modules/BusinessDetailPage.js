@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../config/api';
 import Navbar from './Navbar';
 import LocationSelectMap from './LocationSelectMap'; // Import the LocationSelectMap component
 import './BusinessDetail.css';
+import {useLocation} from 'react-router-dom';
 
 const dayOfWeekMap = {
   0: 'Sunday',
@@ -20,7 +21,11 @@ const dayOfWeekMap = {
 };
 
 const BusinessDetailPage = () => {
-  const { id } = useParams();
+  // const { id } = useParams();
+  const location = useLocation();
+  const { businessId} = location.state || {};
+  const id=businessId;
+  console.log(id);
   const navigate = useNavigate();
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,9 +60,13 @@ const BusinessDetailPage = () => {
     return window.btoa(binary);
   };
 
-  const handleHoursClick = () => {
-    navigate(`/business/config/${id}`);
-  };
+const handleHoursClick = () => {
+  navigate('/business/config', { 
+    state: { 
+      id
+    } 
+  });
+};
 
   useEffect(() => {
     const fetchBusinessDetails = async () => {
@@ -346,7 +355,7 @@ const BusinessDetailPage = () => {
                 <h2>Business Hours</h2>
                 {businessHours && businessHours.length > 0 && (
                   <button className="edit-button" onClick={() => handleHoursClick()}>
-                    <Edit size={16} /> Edit Hours
+                    <Edit size={16} /> Edit Hours and Pricing
                   </button>
                 )}
               </div>
@@ -370,7 +379,7 @@ const BusinessDetailPage = () => {
                 <div className="empty-state">
                   <p>No business hours configured yet.</p>
                   <button className="add-button" onClick={handleHoursClick}>
-                    <Plus size={16} /> Configure Hours
+                    <Plus size={16} /> Configure Hours and Pricing
                   </button>
                 </div>
               )}

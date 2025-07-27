@@ -152,12 +152,12 @@ const UserBusinesses = () => {
               </div>
               <span>View Services</span>
             </div>
-            <div className="quick-action-card" onClick={() => navigate(`/business-hours/${businesses[0]?.id}`)}>
+            {/* <div className="quick-action-card" onClick={() => navigate(`/business-hours/${businesses[0]?.id}`)}>
               <div className="action-icon" style={{backgroundColor: '#3b82f6'}}>
                 <Clock size={24} />
               </div>
               <span>Business Hours</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -250,11 +250,11 @@ const UserBusinesses = () => {
                         <Star size={16} /> View Reviews
                       </button>
                       <button 
-                        className="manage-btn"
-                        onClick={() => navigate(`/business/${business.id}`)}
-                      >
-                        Manage <ArrowRight size={16} />
-                      </button>
+  className="manage-btn"
+  onClick={() => navigate('/business', { state: { businessId: business.id } })}
+>
+  Manage <ArrowRight size={16} />
+</button>
                     </div>
                   </div>
                 </div>

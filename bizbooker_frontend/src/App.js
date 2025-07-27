@@ -35,6 +35,7 @@ import StripeOnboardingComplete from './modules/StripeOnboardingComplete';
 import StripeOnboarding from './modules/StripeOnboarding';
 import BusinessNotifications from './modules/BusinessNotifications';
 import UserProfilePage from './modules/UserProfilePage';
+import BusinessRecommendations from './modules/BusinessRecommendations';
 
 function App() {
   return (
@@ -51,14 +52,14 @@ function App() {
           <Route path="/business-service" element={<><Navbar isAuthenticated={true} /><BusinessService /><Footer /></>} />
           <Route path="/oauth/callback" element={<OAuthCallback />} />
           <Route path="/userBusiness" element={<><Navbar isAuthenticated={true} /><UserBusinesses /><Footer /></>} />
-          <Route path="/business/:id" element={<><Navbar isAuthenticated={true} /><BusinessDetailPage /><Footer /></>} />
+          <Route path="/business" element={<><Navbar isAuthenticated={true} /><BusinessDetailPage /><Footer /></>} />
           <Route path="/business/:businessId/add-location" element={<><Navbar isAuthenticated={true}/><AddLocationPage /><Footer /></>} />
           <Route path="/locations/:locationId/images" element={<><Navbar isAuthenticated={true} /><LocationImagesPage /><Footer /></>} />
           <Route path="/business/customer" element={<><Navbar isAuthenticated={true}/><BusinessListingPage /><Footer/></>} />
           <Route path="/business/customer/:businessId" element={<><Navbar/><BusinessService /><Footer/></>} />
           <Route path="/business/category/:categoryId" element={<><Navbar /><CategoryBusinessListingPage /><Footer /></>} />
           <Route path="/explore" element={<><Navbar isAuthenticated={false} /><NoBusinessesFound /><Footer /></>} />
-          <Route path="/business/config/:businessId" element={<><Navbar isAuthenticated={true}/><BusinessConfig /><Footer/></>} /> 
+          <Route path="/business/config" element={<><Navbar isAuthenticated={true}/><BusinessConfig /><Footer/></>} /> 
           <Route path="/bookings" element={<><Navbar isAuthenticated={true}/><BookingsPage/><Footer/></>}/>
           <Route path="/chatbot" element={<><Navbar isAuthenticated={false} /><Chatbot /></>} />
           <Route path= "/show-appointments" element={<><Navbar isAuthenticated={true} /><AppointmentList /></>} />
@@ -76,6 +77,7 @@ function App() {
           <Route path="/stripe-onboarding-complete/:businessId" element={<StripeOnboardingComplete />} />
           <Route path="/notifications" element={<><Navbar isAuthenticated={true} /><BusinessNotifications /><Footer /></>}/>
           <Route path="/profile" element={<><Navbar isAuthenticated={true} /><UserProfilePage /><Footer /></>}/>
+          <Route path="/book" element={<><Navbar isAuthenticated={true} /><BusinessRecommendations /><Footer /></>}/>
 
           {/* Add more routes as needed */}
         </Routes>

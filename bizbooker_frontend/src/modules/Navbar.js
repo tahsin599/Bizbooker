@@ -6,6 +6,7 @@ import './Navbar.css';
 import '../styles/variables.css';
 import SearchResults from './SearchResults';
 
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -204,8 +205,8 @@ const Navbar = () => {
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
               <Link to="/show-appointments" className="nav-link">Bookings</Link>
               <Link to="/business/customer" className="nav-link">Services</Link>
-              <Link to="/calendar" className="nav-link">Calendar</Link>
-              <Link to="/reports" className="nav-link">Reports</Link>
+              <Link to="/chatbot" className="nav-link">Chatbot</Link>
+              
             </>
           ) : (
             <>

@@ -3,6 +3,7 @@ package com.tahsin.backend.Service;
 import java.io.IOException;
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,11 +17,14 @@ import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.BusinessLocation;
 import com.tahsin.backend.Model.ServiceCategory;
 import com.tahsin.backend.Model.User;
+import com.tahsin.backend.Repository.AppointmentRepository;
 import com.tahsin.backend.Repository.BusinessLocationRepository;
 import com.tahsin.backend.Repository.BusinessRepository;
 import com.tahsin.backend.Repository.ServiceCategoryRepository;
 import com.tahsin.backend.Repository.UserRepository;
 import com.tahsin.backend.dto.PendingBusinessDTO;
+import com.tahsin.backend.dto.TopBusinessDTO;
+import com.tahsin.backend.dto.UserBusinessDTO;
 
 @Service
 @Transactional
@@ -36,6 +40,9 @@ public class BusinessService {
     private BusinessLocationRepository locationRepository;
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
 
     public boolean businessNameExists(String businessName) {
         return businessRepository.existsByBusinessName(businessName);
@@ -152,5 +159,41 @@ public class BusinessService {
 
         return dto;
     }
+
+       public Page<TopBusinessDTO> getTopBusinessesByAppointments(int page, int size) {
+        Page<Object[]> results = businessRepository.findTopBusinessesWithAppointmentCount(
+            PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "appointmentCount"))
+        );
+        
+        return results.map(result -> {
+            Business business = (Business) result[0];
+            Long count = (Long) result[1];
+            return new TopBusinessDTO(
+                business.getId(),
+                business.getBusinessName(),
+                business.getServiceCategory().getName(),
+                count
+            );
+        });
+    }
+    public Page<UserBusinessDTO> getBusinessesByUserAppointments(Long userId, int page, int size) {
+    Page<Object[]> results = appointmentRepository.findBusinessesByUserAppointments(
+        userId, 
+        PageRequest.of(page, size)
+    );
+    
+    return results.map(result -> {
+        Business business = (Business) result[0];
+        Long count = (Long) result[1];
+        return new UserBusinessDTO(
+            business.getId(),
+            business.getBusinessName(),
+            business.getServiceCategory().getName(),
+            count,
+            business.getImageData(),
+            business.getImageType()
+        );
+    });
+}
 
 }

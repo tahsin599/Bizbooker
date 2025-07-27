@@ -66,6 +66,12 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
            "WHERE b.approvalStatus = :status " +
            "ORDER BY b.createdAt DESC")
     Page<Business> findPendingBusinessesWithDetails(ApprovalStatus status, Pageable pageable);
+
+    @Query("SELECT b, COUNT(a.id) as appointmentCount FROM Business b " +
+           "JOIN Appointment a ON b.id = a.business.id " +
+           "GROUP BY b.id " +
+           "ORDER BY appointmentCount DESC")
+    Page<Object[]> findTopBusinessesWithAppointmentCount(Pageable pageable);
    
     
 }

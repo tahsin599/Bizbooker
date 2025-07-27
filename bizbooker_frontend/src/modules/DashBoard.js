@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../config/api';
 import './DashBoard.css';
 import Navbar from './Navbar';
 import ScheduleList from './List';
+import {Bot} from 'lucide-react';
 import { 
   Calendar, Users, Home, MessageSquare, CreditCard, 
   Settings, Plus, FileText, User, Shield, Search, ArrowRight,
@@ -159,7 +160,7 @@ const Dashboard = () => {
       { name: 'Profile', icon: <User size={20} />, color: '#4361ee', path: '/profile' },
       { name: 'Bookings', icon: <Calendar size={20} />, color: '#4361ee', path: '/bookings' },
       { name: 'Payment', icon: <CreditCard size={20} />, color: '#3b56d4', path: '/payment' },
-      { name: 'Settings', icon: <Settings size={20} />, color: '#4895ef', path: '/settings' }
+      
     ];
 
     const categoryServices = serviceTypes.map(service => {
@@ -196,6 +197,12 @@ const Dashboard = () => {
   const handleMyBusinesses = () => {
     navigate('/userBusiness');
   };
+  const handleRecom =() =>{
+    navigate('/book');
+  }
+  const handleChat =() =>{
+    navigate('/chatbot');
+  }
 
   // Verify authentication and fetch data
   useEffect(() => {
@@ -282,7 +289,7 @@ const Dashboard = () => {
         </div>
 
         {/* Search Section */}
-        <div className="search-section">
+        {/* <div className="search-section">
           <div className="search-container">
             <div className="search-icon">
               <Search size={20} />
@@ -295,14 +302,14 @@ const Dashboard = () => {
               className="search-input"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Quick Actions */}
         <div className="quick-actions-section">
           <h3>Quick Actions</h3>
           <div className="quick-actions">
-            <div className="quick-action-card">
-              <div className="action-icon" style={{backgroundColor: '#4361ee'}}>
+            <div className="quick-action-card" onClick={handleRecom}>
+              <div className="action-icon" style={{backgroundColor: '#4361ee'}} >
                 <Plus size={24} />
               </div>
               <span>New Booking</span>
@@ -313,11 +320,11 @@ const Dashboard = () => {
               </div>
               <span>Create Business</span>
             </div>
-            <div className="quick-action-card">
+            <div className="quick-action-card" onClick={handleChat}>
               <div className="action-icon" style={{backgroundColor: '#10b981'}}>
-                <Users size={24} />
+                <Bot size={24} />
               </div>
-              <span>Manage Clients</span>
+              <span>Bizzy-AI Assistant</span>
             </div>
             <div className="quick-action-card" onClick={handleMyBusinesses}>
               <div className="action-icon" style={{backgroundColor: '#f59e0b'}}>
@@ -325,12 +332,12 @@ const Dashboard = () => {
               </div>
               <span>My Businesses</span>
             </div>
-            <div className="quick-action-card">
+            {/* <div className="quick-action-card">
               <div className="action-icon" style={{backgroundColor: '#ef4444'}}>
                 <Settings size={24} />
               </div>
               <span>Settings</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -391,7 +398,7 @@ const Dashboard = () => {
               <p>No appointments scheduled for today</p>
               <button 
                 className="book-now-btn"
-                onClick={() => navigate('/business')}
+                onClick={() => navigate('/book')}
               >
                 <Plus size={16} /> Book Now
               </button>

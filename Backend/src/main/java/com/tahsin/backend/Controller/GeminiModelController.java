@@ -10,6 +10,7 @@ import com.tahsin.backend.Model.Business;
 import com.tahsin.backend.Model.BusinessHours;
 import com.tahsin.backend.Model.BusinessLocation;
 import com.tahsin.backend.Model.ServiceCategory;
+import com.tahsin.backend.Model.SlotConfiguration;
 import com.tahsin.backend.Model.SlotInterval;
 import com.tahsin.backend.Model.User;
 import com.tahsin.backend.Repository.AppointmentRepository;
@@ -71,7 +72,7 @@ public class GeminiModelController {
     private BusinessHoursRepository businessHoursRepository;
     @Autowired
     private ReviewService reviewService;
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
     public GeminiModelController(RestClient restClient,
             AIMessageService messageService,
@@ -222,6 +223,8 @@ public class GeminiModelController {
                            - Missing critical info: "(na):IncompleteRequest"
                         L.if the user wants to know highest rated businesses of certain type in a certain area:
                            -(areaName:category):RatingCheckHighest
+                        M.if user wants to know about the slot price of a business then:
+                           -(business name):SlotPrice
 
 
                         📜 CONTEXT PROCESSING RULES:
@@ -336,6 +339,7 @@ public class GeminiModelController {
 
             String parameters = parts[0].substring(1); // Remove opening parenthesis
             String responseType = parts[1];
+            System.out.println(parameters);
 
             // Route to appropriate handler based on response type
             return switch (responseType) {
@@ -355,6 +359,7 @@ public class GeminiModelController {
                 case "LocationServiceCheck" -> handleLocationServiceCheck(parameters);
                 case "CheckRating" -> handleRatingCheck(parameters);
                 case "RatingCheckHighest" -> handleRatingCheckHighest(parameters);
+                case "SlotPrice" -> handleSlotPrice(parameters);
                 case "Gratitude" ->
                     "You're welcome! If you have any more questions or need more assistance, feel free to ask!I can always help you with your business related queries and bookings.";
                 default -> handleGreeting();
@@ -363,6 +368,33 @@ public class GeminiModelController {
             log.error("Error processing response", e);
             return "Sorry I need some context to fulfill you request.";
         }
+    }
+
+
+    private String handleSlotPrice(String businessName){
+        Business business=businessRepository.findByBusinessNameIgnoreCase(businessName);
+        if(business==null){
+            return "Sorry. Couldnt find any business with this name. Please ask about a valid business to know price.";
+        }
+        List<BusinessLocation> locations=business.getLocations();
+        if(locations.isEmpty()){
+            return "Sorry.This business is not configured in any area.";
+        }
+
+        List<SlotConfiguration> configs=locations.get(0).getSlotConfiguration();
+        if(configs.isEmpty()){
+            return "Sorry.The business "+business.getBusinessName()+" has not set their slot prices yet";
+        }
+        
+
+        Double slot_price=configs.get(0).getSlotPrice();
+        return "The slot price of "+business.getBusinessName()+" is "+slot_price+".Let me know if you want to know more information about this business";
+
+
+
+
+
+        
     }
 
     private String handleRatingCheckHighest(String parameters) {

@@ -21,6 +21,26 @@
   margin-bottom: 1rem;
 }
 
+.book-now-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.book-now-btn:hover {
+  background: linear-gradient(135deg, #3a56d4 0%, #2a0878 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
 
 .welcome-card {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);

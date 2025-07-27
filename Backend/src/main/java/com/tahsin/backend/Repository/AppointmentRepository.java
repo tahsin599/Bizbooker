@@ -186,4 +186,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     
     // Find appointments by status
     List<Appointment> findByStatus(AppointmentStatus status);
+
+    @Query("SELECT a.business, COUNT(a.id) as appointmentCount " +
+           "FROM Appointment a " +
+           "WHERE a.customer.id = :userId " +
+           "GROUP BY a.business " +
+           "ORDER BY appointmentCount DESC")
+    Page<Object[]> findBusinessesByUserAppointments(
+        @Param("userId") Long userId, 
+        Pageable pageable
+    );
 }
