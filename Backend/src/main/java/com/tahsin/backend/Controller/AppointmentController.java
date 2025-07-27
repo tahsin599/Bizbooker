@@ -6,7 +6,7 @@
 // import com.tahsin.backend.Repository.SlotIntervalRepository;
 // import com.tahsin.backend.Repository.UserRepository;
 // import com.tahsin.backend.Service.*;
-// import com.tahsin.backend.dto.AppointmentDTO;
+// import com.tahsin.backend.dto.AppointmentDto;
 // import com.tahsin.backend.dto.AppointmentResponseDTO;
 
 // import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@
     
 
 //     @PostMapping
-//     public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentDTO appointmentDTO) {
+//     public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentSto appointmentDTO) {
 //         try {
 //             // Validate required fields
 //             if (appointmentDTO.getCustomerId() == null ||
@@ -151,7 +151,7 @@ import com.tahsin.backend.Repository.BusinessRepository;
 import com.tahsin.backend.Repository.SlotIntervalRepository;
 import com.tahsin.backend.Repository.UserRepository;
 import com.tahsin.backend.Service.*;
-import com.tahsin.backend.dto.AppointmentDTO;
+import com.tahsin.backend.dto.AppointmentDto;
 import com.tahsin.backend.dto.AppointmentResponseDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -187,7 +187,7 @@ public class AppointmentController {
     private ReviewService reviewService;
 
     @PostMapping
-    public ResponseEntity<?> createAppointment(@RequestBody AppointmentDTO appointmentDTO) {
+    public ResponseEntity<?> createAppointment(@RequestBody AppointmentDto appointmentDTO) {
         try {
             System.out.println("[APPOINTMENT] Incoming DTO: " + appointmentDTO);
             // Validate required fields
@@ -448,7 +448,7 @@ public ResponseEntity<?> updateAppointmentStatus(
 }
 
 @PostMapping("/pending")
-public ResponseEntity<?> createPendingAppointment(@RequestBody AppointmentDTO appointmentDTO) {
+public ResponseEntity<?> createPendingAppointment(@RequestBody AppointmentDto appointmentDTO) {
     try {
         System.out.println("[APPOINTMENT] Creating pending appointment: " + appointmentDTO);
         // Validate required fields (no payment reference needed for pending)
