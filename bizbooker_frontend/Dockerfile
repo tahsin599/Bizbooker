@@ -1,50 +1,45 @@
-# Multi-stage build for optimized production image
+# Stage 1: Builder with increased memory
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --silent --only=production
+# Install dependencies (include devDependencies for build tools)
+RUN npm ci --silent
 
 # Copy source code
 COPY . .
 
-# Change this line in your Dockerfile
+# Build with 4GB memory allocation
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
-# To this (increases memory to 4GB)
-RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
-
-# Production stage
-FROM node:18-alpine AS production
+# Stage 2: Production image
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Install serve globally for serving static files
+# Install serve globally
 RUN npm install -g serve@14.2.1
 
-# Copy built application from builder stage
+# Copy only built files from builder
 COPY --from=builder /app/build ./build
 
-# Create non-root user for security
+# Non-root user setup
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S reactjs -u 1001 && \
     chown -R reactjs:nodejs /app
 
-# Switch to non-root user
 USER reactjs
 
-# Expose port 3000
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://57.158.25.224:3000 || exit 1
+# Healthcheck (fixed to use localhost)
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://57.158.224.25:3000 || exit 1
 
-# Serve the application
 CMD ["serve", "-s", "build", "-l", "3000"]
 
 # Development stage
