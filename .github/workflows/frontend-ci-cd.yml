@@ -2,7 +2,7 @@ name: Frontend CI/CD Pipeline
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master","render" ]
     paths:
       
       - 'bizbooker_frontend/**'  # Additional path you mentioned
