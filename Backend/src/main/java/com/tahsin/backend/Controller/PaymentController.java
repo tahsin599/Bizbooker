@@ -401,14 +401,14 @@ public class PaymentController {
 
             // Default URLs if not provided
             if (successUrl == null || successUrl.isEmpty()) {
-                successUrl = "http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}";
+                successUrl = "http://57.158.25.224:3000/payment-success?session_id={CHECKOUT_SESSION_ID}";
             } else {
                 // Add session_id parameter to custom success URL
                 successUrl += (successUrl.contains("?") ? "&" : "?") + "session_id={CHECKOUT_SESSION_ID}";
             }
 
             if (cancelUrl == null || cancelUrl.isEmpty()) {
-                cancelUrl = "http://localhost:3000/payment-cancel";
+                cancelUrl = "http://57.158.25.224:3000/payment-cancel";
             }
 
             SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
