@@ -27,6 +27,7 @@ RUN npm install -g serve@14.2.1
 # Copy only built files from builder
 COPY --from=builder /app/build ./build
 
+
 # Non-root user setup
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S reactjs -u 1001 && \
