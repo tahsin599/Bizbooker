@@ -17,7 +17,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # Stage 2: Production image
-FROM node:18-alpine
+FROM node:18-alpine AS production
 
 WORKDIR /app
 
