@@ -128,6 +128,7 @@ public class AppointmentDTO {
     // Getters and Setters
     public Long getCustomerId() {
         return customerId;
+        
     }
 
     public void setCustomerId(Long customerId) {
