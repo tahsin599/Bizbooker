@@ -4,7 +4,7 @@ services:
     container_name: bizbooker-database
     environment:
       - MYSQL_ROOT_PASSWORD=tahsinsiam599
-      - MYSQL_DATABASE=tahsins
+      - MYSQL_DATABASE=tahsin
       - MYSQL_USER=bizbooker_user
       - MYSQL_PASSWORD=bizbooker_pass123
     ports:
@@ -29,7 +29,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/tahsins
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/tahsin
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=tahsinsiam599
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
